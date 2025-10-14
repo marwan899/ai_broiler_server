@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الإدارة الذكي لفروج اللحم Ross 308</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         /* (Styles remain the same) */
         body { font-family: 'Cairo', sans-serif; overscroll-behavior-y: contain; background-color: #f7f9fc; }
@@ -280,7 +273,7 @@ const DEFAULT_FLOCK_DATA = {
 };
 
 // --- إعدادات الخادم والربط ---
-// هذا هو الرابط الثابت لـ Google Cloud App Engine
+// تم تغيير الرابط لاستخدام GCP
 const SERVER_URL = 'https://gen-lang-client-0187043650.ew.r.appspot.com'; 
 const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
 // ----------------------------------------
@@ -356,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_GUIDE_AGE = broilerGuideData.length - 1; 
 
     async function loadFlockDataFromServer(flockId) {
-        // تم تعديل المسار لاستخدام SERVER_URL
+        // تم تصحيح المسار لربط SERVER_URL
         const response = await fetch(`${SERVER_URL}/api/flock/all-data`);
         if (!response.ok) {
             throw new Error(`فشل في جلب البيانات: ${response.status}`);
@@ -372,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error("يجب تحديد معرّف القطيع (flockId) للحفظ.");
         }
         
-        // تم تعديل المسار لاستخدام SERVER_URL
+        // تم تصحيح المسار لربط SERVER_URL
         const response = await fetch(`${SERVER_URL}/api/records/save`, {
             method: 'POST',
             headers: {
