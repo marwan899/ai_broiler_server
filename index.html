@@ -355,7 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadFlockDataFromServer(flockId) {
         // تم تعديل المسار هنا: /api/flock/all-data
-        const response = await fetch(`/api/flock/all-data`);
+        const response = await fetch('/api/flock/all-data');
+التصدير إلى "جداول بيانات Google"
+
         if (!response.ok) {
             throw new Error(`فشل في جلب البيانات: ${response.status}`);
         }
@@ -628,5 +630,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
