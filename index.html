@@ -289,20 +289,167 @@ let flockData = {...DEFAULT_FLOCK_DATA};
 let currentFlockId = null; 
 let currentBreederName = null;
 
+const initialSetupModal = document.getElementById('initial-setup-modal');
+const dashboardScreen = document.getElementById('dashboard-screen');
+const startAppBtn = document.getElementById('start-app-btn');
+const initialBreederNameInput = document.getElementById('initial-breeder-name-input');
+const setupErrorMsg = document.getElementById('setup-error-message');
+
+
 function createFlockId(name) {
-    // استخدم Base64 لضمان معرف فريد حتى لو كان الاسم يحتوي على رموز
+    // استخدم Base64 لضمان معرف فريد
     return 'FLOCK_' + btoa(name.trim().toUpperCase());
 }
 
-// ... (بقية كود JavaScript يبقى كما هو)
-// ... (دالة loadFlockDataFromServer تم تعديلها لاستخدام المعرف الديناميكي)
-// ... (دالة saveRecordToServer تم تعديلها لاستخدام المعرف الديناميكي)
-// ... (منطق الإعداد الأولي والتحقق من العدد الأولي)
-// ... (دالة loadData)
-// ... (دالة updateDashboard)
-// ... (دالة calculateAndDisplayMetrics)
-// ... (دوال Gemini API)
-// ... (معالجات الأحداث)
+// دالة جلب البيانات من الخادم (معدلة)
+async function loadFlockDataFromServer(flockId) {
+    // تم تعديل المسار هنا
+    const response = await fetch(`/api/flock/all-data`); 
+    if (!response.ok) {
+        throw new Error(`فشل في جلب البيانات: ${response.status}`);
+    }
+    const allData = await response.json();
+    
+    // تصفية البيانات حسب flockId الحالي
+    const flock = allData.find(f => f.flockId === flockId);
+    return flock || null;
+}
+
+// دالة حفظ السجل في الخادم (معدلة)
+async function saveRecordToServer(record) {
+    // تم تعديل المسار هنا
+    const response = await fetch(`/api/records/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(record)
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+         // عرض رسالة الخطأ الواردة من الخادم
+        throw new Error(result.message || 'فشل في حفظ البيانات على الخادم.');
+    }
+    return result;
+}
+
+// دالة تحميل البيانات (لا يوجد تعديل)
+async function loadData() {
+    // ... (هذا الجزء يعتمد على loadFlockDataFromServer الذي تم تعديله)
+    document.getElementById('breeder-name').value = currentBreederName;
+    document.getElementById('current-breeder-display').textContent = `المربي: ${currentBreederName}`;
+    
+    try {
+        const data = await loadFlockDataFromServer(currentFlockId);
+        if (data) {
+            flockData = {
+                ...DEFAULT_FLOCK_DATA,
+                ...data,
+                dailyRecords: data.dailyRecords || []
+            };
+            // إخفاء حقل العدد الأولي إذا وجدت بيانات
+            document.getElementById('initial-count-section').classList.add('hidden');
+        } else {
+            // إظهار حقل العدد الأولي إذا لم توجد بيانات
+            document.getElementById('initial-count-section').classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error("خطأ في تحميل البيانات:", error);
+    }
+    updateDashboard(flockData.currentAge);
+}
+
+// ... (بقية الدوال تبقى كما هي)
+function updateDashboard(age) { /* ... */ }
+function calculateAndDisplayMetrics(age) { /* ... */ }
+function getDailyTips(age) { /* ... */ }
+async function analyzeSymptomsWithGemini(symptoms, base64Image) { /* ... */ }
+
+// --- منطق الإعداد الأولي والتحقق (تم دمجه وتصحيحه) ---
+function setupApplication() {
+    currentBreederName = localStorage.getItem('breederName');
+    
+    if (currentBreederName) {
+        // إذا كان الاسم موجوداً:
+        currentFlockId = createFlockId(currentBreederName);
+        initialSetupModal.classList.add('hidden');
+        dashboardScreen.classList.remove('hidden');
+        loadData();
+    } else {
+        // إذا لم يتم العثور على الاسم:
+        initialSetupModal.classList.remove('hidden');
+        dashboardScreen.classList.add('hidden');
+    }
+}
+
+// ... (معالجات الأحداث تبقى كما هي)
+
+document.addEventListener('DOMContentLoaded', () => {
+    // ... (جلب العناصر)
+    
+    // تشغيل الإعداد الأولي
+    setupApplication(); 
+    
+    // ... (بقية معالجات الأحداث)
+
+    // معالج زر "بدء التسجيل" داخل المودال
+    startAppBtn.onclick = () => {
+        const name = initialBreederNameInput.value.trim();
+        if (name.length < 3) {
+            setupErrorMsg.classList.remove('hidden');
+            return;
+        }
+        
+        currentBreederName = name;
+        currentFlockId = createFlockId(currentBreederName);
+        localStorage.setItem('breederName', currentBreederName);
+
+        setupErrorMsg.classList.add('hidden');
+        initialSetupModal.classList.add('hidden');
+        dashboardScreen.classList.remove('hidden'); 
+        
+        loadData();
+    };
+
+    // معالج فورم حفظ البيانات (لا تغيير إلا في دالة saveRecordToServer التي تم تعديلها في الأعلى)
+    document.getElementById('daily-data-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        // ... (كود جمع البيانات)
+        
+        const day = parseInt(document.getElementById('flock-age-input').value);
+        
+        // ... (جمع البيانات...)
+
+        const record = {
+            flockId: currentFlockId, // إضافة الـ ID
+            breederName: currentBreederName, // إضافة اسم المربي
+            day: day,
+            initialChickCount: initialCountValue, // سيتم استخدامه فقط في أول عملية حفظ
+            feedKg: parseFloat(document.getElementById('actual-feed').value) || 0,
+            mortality: parseInt(document.getElementById('mortality-count').value) || 0,
+            waterIntake: parseFloat(document.getElementById('actual-water').value) || 0,
+            avgWeight: document.getElementById('actual-weight').value ? parseFloat(document.getElementById('actual-weight').value) : null,
+            notes: document.getElementById('notes').value.trim()
+        };
+
+        try {
+            await saveRecordToServer(record); // استدعاء الدالة المعدلة
+            // ... (رسائل النجاح)
+            
+            // تحديث الواجهة بعد الحفظ
+            loadData(); 
+
+        } catch (error) {
+            // ... (رسائل الخطأ)
+             alert(`خطأ في الحفظ: ${error.message}`);
+        }
+    });
+
+    // ... (بقية معالجات الأحداث)
+});
+
+
 </script>
 </body>
 </html>
