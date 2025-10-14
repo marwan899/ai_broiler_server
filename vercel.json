@@ -15,11 +15,11 @@
       "destination": "/admin-dashboard.html" 
     },
     { 
-      "source": "/index.html",
+      "source": "/index.html", 
       "destination": "/index.html" 
     },
     { 
-      "source": "/",
+      "source": "/(.*)",
       "destination": "/index.html" 
     }
   ]
