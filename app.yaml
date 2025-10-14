@@ -1,0 +1,13 @@
+# app.yaml (في المجلد الجذر)
+runtime: nodejs20 # يمكن أن تكون nodejs18 أو nodejs20
+instance_class: F1 # فئة التطبيق (تكفي للاستخدامات الخفيفة وتساعد على التوفير)
+service: default # الخدمة الرئيسية
+
+# يخبر App Engine بما يجب تشغيله عند بدء التشغيل
+entrypoint: node api/index.js 
+
+# توجيه كل طلبات الشبكة إلى خادم Express.js الخاص بك
+handlers:
+- url: /.*
+  script: auto
+  secure: always # لضمان استخدام HTTPS دائمًا
