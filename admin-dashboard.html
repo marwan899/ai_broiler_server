@@ -103,7 +103,8 @@
 
 
 <script>
-    const SERVER_URL = ''; 
+    // الرابط الثابت لـ Google Cloud App Engine
+    const SERVER_URL = 'https://gen-lang-client-0187043650.ew.r.appspot.com'; 
     
     const statusMessage = document.getElementById('status-message');
     const flockDetailsDiv = document.getElementById('flock-details');
@@ -126,8 +127,8 @@
         }
         
         try {
-            // تم تعديل المسار هنا
-            const response = await fetch(`/api/records/delete`, { 
+            // تم تعديل المسار لاستخدام SERVER_URL
+            const response = await fetch(`${SERVER_URL}/api/records/delete`, { 
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ flockId, day })
@@ -184,8 +185,8 @@
         };
 
         try {
-            // تم تعديل المسار هنا
-            const response = await fetch(`/api/records/update`, {
+            // تم تعديل المسار لاستخدام SERVER_URL
+            const response = await fetch(`${SERVER_URL}/api/records/update`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData)
@@ -213,8 +214,8 @@
         flockDetailsDiv.innerHTML = '';
 
         try {
-            // تم تعديل المسار هنا
-            const response = await fetch(`/api/flock/all-data`);
+            // تم تعديل المسار لاستخدام SERVER_URL
+            const response = await fetch(`${SERVER_URL}/api/flock/all-data`);
             if (!response.ok) {
                 throw new Error(`فشل في جلب البيانات: ${response.status} ${response.statusText}`);
             }
