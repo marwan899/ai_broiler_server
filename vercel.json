@@ -7,8 +7,12 @@
   ],
   "rewrites": [
     { 
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "source": "/api/index/records/(.*)",
+      "destination": "/api/index.js" 
+    },
+    { 
+      "source": "/api/index/flock/(.*)",
+      "destination": "/api/index.js" 
     },
     { 
       "source": "/admin-dashboard.html", 
