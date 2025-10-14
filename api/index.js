@@ -173,11 +173,4 @@ app.put('/api/records/update', (req, res) => {
     saveFlockData(flockData);
     res.status(200).send({ message: `✅ تم تحديث سجل اليوم ${updatedRecord.day} بنجاح.`, record: flock.dailyRecords[existingIndex] });
 });
-
-
-// --- 5. مسار تشغيل التطبيق (الواجهة الأمامية) ---
-// Vercel تقوم تلقائياً بخدمة ملفات HTML في الجذر، لذا نحتاج فقط لتعريف المسارات.
-// لا حاجة لـ app.get('/', ...) هنا.
-
-// هذا السطر يخبر Vercel بتصدير التطبيق كدالة Serverless
 module.exports = app;
