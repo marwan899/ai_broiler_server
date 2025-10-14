@@ -103,7 +103,7 @@
 
 
 <script>
-    const SERVER_URL = ''; // تم تعديله للعمل مع Vercel النسبي
+    const SERVER_URL = ''; 
     
     const statusMessage = document.getElementById('status-message');
     const flockDetailsDiv = document.getElementById('flock-details');
@@ -112,7 +112,6 @@
     const editModal = document.getElementById('edit-modal');
     const editForm = document.getElementById('edit-form');
 
-    // دالة مساعدة لتنسيق التاريخ والوقت
     function formatDateTime(isoString) {
         if (!isoString) return 'غير مسجل';
         const date = new Date(isoString);
@@ -121,7 +120,6 @@
                date.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', hour12: true });
     }
     
-    // --- دوال الاتصال الجديدة (PUT و DELETE) ---
     window.deleteRecord = async (flockId, day) => {
         if (!confirm(`هل أنت متأكد من حذف سجل اليوم ${day} من القطيع ${flockId}؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
             return;
@@ -150,7 +148,6 @@
         }
     }
 
-    // --- دالة فتح مودال التعديل (معدل) ---
     window.openEditModal = (record) => {
         document.getElementById('edit-day-display').textContent = record.day;
         document.getElementById('edit-flock-id-display').textContent = record.flockId;
@@ -168,12 +165,10 @@
         editModal.classList.remove('hidden');
     }
 
-    // --- دالة إغلاق المودال ---
     window.closeEditModal = () => {
         editModal.classList.add('hidden');
     }
 
-    // --- معالج إرسال التعديل (PUT) ---
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -212,7 +207,6 @@
         }
     });
 
-    // --- دالة لجلب وعرض البيانات (معدلة للتصفية) ---
     window.loadAdminDashboard = async (filterBreederName = null) => {
         statusMessage.textContent = 'جاري الاتصال بالخادم...';
         recordsTableBody.innerHTML = '';
@@ -249,27 +243,24 @@
                     allRecords = allRecords.concat(flock.dailyRecords.map(record => ({
                         ...record,
                         initialChickCount: flock.initialChickCount,
-                        flockId: flock.flockId // تأكيد إضافة الـ ID للحذف والتعديل
+                        flockId: flock.flockId 
                     })));
                  }
             });
             
-            // حساب الإجمالي للملخص
             const totalInitialCount = flocksToDisplay.reduce((sum, f) => sum + (f.initialChickCount || 0), 0);
             const totalMortality = allRecords.reduce((sum, r) => sum + (r.mortality || 0), 0);
             const totalFeed = allRecords.reduce((sum, r) => sum + (r.feedKg || 0), 0);
             const currentTotalCount = totalInitialCount - totalMortality;
 
-            // عرض تفاصيل القطيع الرئيسية (الإجمالي)
             flockDetailsDiv.innerHTML = `
                 <div class="data-card lg:col-span-2 bg-indigo-50 border-indigo-600">إجمالي المربين: <span class="font-bold text-indigo-700">${flocksToDisplay.length}</span></div>
                 <div class="data-card bg-green-50 border-green-600">إجمالي العدد الأولي: <span class="font-bold text-green-700">${totalInitialCount.toLocaleString('ar-IQ')}</span></div>
                 <div class="data-card">إجمالي الطيور الحالي: <span class="font-bold text-green-700">${currentTotalCount.toLocaleString('ar-IQ')}</span></div>
                 <div class="data-card">إجمالي النفوق: <span class="font-bold text-red-600">${totalMortality.toLocaleString('ar-IQ')}</span></div>
-                <div class="data-card lg:col-span-2">إجمالي العلف المستهلك (كجم): <span class="font-bold">${totalFeed.toFixed(2)}</span></div>
+                <div class="data-card lg:col-span-2">إجمالي العلف المستهلك (كغم): <span class="font-bold">${totalFeed.toFixed(2)}</span></div>
             `;
 
-            // 4. عرض السجلات في الجدول
             const sortedRecords = [...allRecords].sort((a, b) => {
                 if (a.breederName !== b.breederName) {
                     return a.breederName.localeCompare(b.breederName);
@@ -307,13 +298,11 @@
             statusMessage.textContent = `✅ تم تحديث البيانات بنجاح. مجموع السجلات: ${allRecords.length}.`;
 
         } catch (error) {
-            console.error("خطأ في الاتصال بالخادم:", error);
             statusMessage.className = 'text-lg font-semibold text-red-600 mb-4';
             statusMessage.textContent = `🛑 فشل الاتصال بالخادم: تأكد من أن الخادم يعمل ومتاح عبر HTTPS. (${error.message})`;
         }
     }
 
-    // --- دالة البحث والتصفية (على مستوى الجدول الحالي) ---
     window.filterTable = () => {
         const input = document.getElementById('breeder-search');
         const filter = input.value.toUpperCase();
@@ -333,7 +322,6 @@
         }
     }
 
-    // تشغيل الدالة عند تحميل الصفحة
     loadAdminDashboard(null);
 </script>
 </body>
