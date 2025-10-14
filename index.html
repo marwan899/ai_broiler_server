@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الإدارة الذكي لفروج اللحم Ross 308</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         /* (Styles remain the same) */
         body { font-family: 'Cairo', sans-serif; overscroll-behavior-y: contain; background-color: #f7f9fc; }
@@ -199,7 +206,7 @@
     </div>
 
 <script>
-// --- البيانات الإرشادية لفروج اللحم (Ross 308 Standards) ---
+// --- البيانات الإرشادية و الإعدادات (تبقى كما هي) ---
 const broilerGuideData = [
     { day: 0, weight: 42, dailyFeed: 0, cumulativeFeed: 0, fcr: 0, temp: 33, humidity: 65 },
     { day: 1, weight: 55, dailyFeed: 12, cumulativeFeed: 12, fcr: 0.92, temp: 33, humidity: 65 },
@@ -273,7 +280,7 @@ const DEFAULT_FLOCK_DATA = {
 };
 
 // --- إعدادات الخادم والربط ---
-// تم تغيير الرابط لاستخدام GCP
+// هذا هو الرابط الثابت لـ Google Cloud App Engine
 const SERVER_URL = 'https://gen-lang-client-0187043650.ew.r.appspot.com'; 
 const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
 // ----------------------------------------
