@@ -224,7 +224,7 @@ const broilerGuideData = [
     { day: 13, weight: 435, dailyFeed: 60, cumulativeFeed: 438, fcr: 1.20, temp: 28, humidity: 55 },
     { day: 14, weight: 488, dailyFeed: 65, cumulativeFeed: 503, fcr: 1.22, temp: 28, humidity: 55 },
     { day: 15, weight: 545, dailyFeed: 70, cumulativeFeed: 573, fcr: 1.24, temp: 28, humidity: 55 },
-    { day: 16, weight: 605, dailyFeed: 76, cumulativeFeed: 649, fcr: 1.26, temp: 27, humidity: 55 },
+    { day: 16, weight: 605, dailyFeed: 76, cumulative: 649, fcr: 1.26, temp: 27, humidity: 55 },
     { day: 17, weight: 670, dailyFeed: 82, cumulativeFeed: 731, fcr: 1.28, temp: 27, humidity: 55 },
     { day: 18, weight: 735, dailyFeed: 88, cumulativeFeed: 819, fcr: 1.30, temp: 27, humidity: 55 },
     { day: 19, weight: 805, dailyFeed: 94, cumulativeFeed: 913, fcr: 1.32, temp: 26, humidity: 55 },
@@ -280,7 +280,6 @@ const DEFAULT_FLOCK_DATA = {
 };
 
 // --- إعدادات الخادم والربط ---
-// سنستخدم رابط Vercel النسبي الآن
 const SERVER_URL = ''; 
 const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
 // ----------------------------------------
@@ -297,103 +296,238 @@ const setupErrorMsg = document.getElementById('setup-error-message');
 
 
 function createFlockId(name) {
-    // استخدم Base64 لضمان معرف فريد
     return 'FLOCK_' + btoa(name.trim().toUpperCase());
 }
 
-// دالة جلب البيانات من الخادم (معدلة)
-async function loadFlockDataFromServer(flockId) {
-    // تم تعديل المسار هنا
-    const response = await fetch(`/api/flock/all-data`); 
-    if (!response.ok) {
-        throw new Error(`فشل في جلب البيانات: ${response.status}`);
-    }
-    const allData = await response.json();
+function getDailyTips(age) {
+    const maxAge = broilerGuideData.length - 1;
+    const safeAge = Math.min(Math.max(0, age), maxAge);
+    const guide = broilerGuideData[safeAge];
     
-    // تصفية البيانات حسب flockId الحالي
-    const flock = allData.find(f => f.flockId === flockId);
-    return flock || null;
-}
+    if (!guide) return "تم تجاوز الحد الأقصى للأيام المسجلة في دليل Ross 308. يرجى التخطيط للحصاد النهائي.";
 
-// دالة حفظ السجل في الخادم (معدلة)
-async function saveRecordToServer(record) {
-    // تم تعديل المسار هنا
-    const response = await fetch(`/api/records/save`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(record)
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-         // عرض رسالة الخطأ الواردة من الخادم
-        throw new Error(result.message || 'فشل في حفظ البيانات على الخادم.');
-    }
-    return result;
-}
-
-// دالة تحميل البيانات (لا يوجد تعديل)
-async function loadData() {
-    // ... (هذا الجزء يعتمد على loadFlockDataFromServer الذي تم تعديله)
-    document.getElementById('breeder-name').value = currentBreederName;
-    document.getElementById('current-breeder-display').textContent = `المربي: ${currentBreederName}`;
-    
-    try {
-        const data = await loadFlockDataFromServer(currentFlockId);
-        if (data) {
-            flockData = {
-                ...DEFAULT_FLOCK_DATA,
-                ...data,
-                dailyRecords: data.dailyRecords || []
-            };
-            // إخفاء حقل العدد الأولي إذا وجدت بيانات
-            document.getElementById('initial-count-section').classList.add('hidden');
-        } else {
-            // إظهار حقل العدد الأولي إذا لم توجد بيانات
-            document.getElementById('initial-count-section').classList.remove('hidden');
-        }
-    } catch (error) {
-        console.error("خطأ في تحميل البيانات:", error);
-    }
-    updateDashboard(flockData.currentAge);
-}
-
-// ... (بقية الدوال تبقى كما هي)
-function updateDashboard(age) { /* ... */ }
-function calculateAndDisplayMetrics(age) { /* ... */ }
-function getDailyTips(age) { /* ... */ }
-async function analyzeSymptomsWithGemini(symptoms, base64Image) { /* ... */ }
-
-// --- منطق الإعداد الأولي والتحقق (تم دمجه وتصحيحه) ---
-function setupApplication() {
-    currentBreederName = localStorage.getItem('breederName');
-    
-    if (currentBreederName) {
-        // إذا كان الاسم موجوداً:
-        currentFlockId = createFlockId(currentBreederName);
-        initialSetupModal.classList.add('hidden');
-        dashboardScreen.classList.remove('hidden');
-        loadData();
+    if (safeAge <= 3) {
+        return `ركّز على فترة التحضين: تأكد من أن درجة الحرارة ثابتة عند ${guide.temp}°م، وأن مصدر الماء متاح بسهولة. تحفيز الطيور على الأكل والشرب ضروري جداً.`;
+    } else if (safeAge <= 7) {
+        return "الأسبوع الأول حاسم. يجب فحص الفرشة يومياً وإزالة أي بلل. راقب معدل النفوق (المحسوب في لوحة المتابعة) وتأكد من أنه ضمن الحدود الطبيعية (<1%).";
+    } else if (safeAge <= 14) {
+        return "ابدأ بزيادة التهوية تدريجياً لتقليل الرطوبة وتحسين جودة الهواء. وسّع مساحة الحضانة ببطء لتشجيع الحركة وتجنب الازدحام.";
+    } else if (safeAge <= 21) {
+        return "مرحلة النمو السريع: تأكد من توافر العلف على مدار الساعة. التركيز على التهوية لتوفير الأكسجين الكافي للنمو وتجنب أمراض الجهاز التنفسي. الوزن المستهدف هو: " + guide.weight + " غرام.";
+    } else if (safeAge <= 35) {
+        return `مرحلة الإنهاء المبكر. الحرارة المرتفعة تشكل خطراً. حافظ على درجة الحرارة حول ${guide.temp}°م. راقب استهلاك الماء؛ أي انخفاض قد يدل على مشكلة صحية أو حرارية.`;
+    } else if (safeAge <= 45) { 
+        return "مرحلة الإنهاء: تحويل العلف إلى وزن يتطلب طاقة أقل. قلل الإجهاد على الطيور قدر الإمكان. تأكد من أن معامل التحويل الفعلي (FCR) قريب من الهدف المستهدف لهذا اليوم.";
     } else {
-        // إذا لم يتم العثور على الاسم:
-        initialSetupModal.classList.remove('hidden');
-        dashboardScreen.classList.add('hidden');
+        return "أيام الحصاد المتقدمة: التركيز الكامل على جودة اللحم والأوزان النهائية. استمر في التحكم بالبيئة بدقة وتجنب أي إجهاد حراري أو ضوضاء. معامل FCR المستهدف: " + guide.fcr;
     }
 }
 
-// ... (معالجات الأحداث تبقى كما هي)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ... (جلب العناصر)
     
-    // تشغيل الإعداد الأولي
-    setupApplication(); 
-    
-    // ... (بقية معالجات الأحداث)
+    const resetButton = document.getElementById('reset-button');
+    const dataEntryMessage = document.getElementById('data-entry-message');
+    const flockAgeInput = document.getElementById('flock-age-input');
+    const currentAgeDisplay = document.getElementById('current-age-display');
+    const dailyTipsContent = document.getElementById('daily-tips-content');
+    const dailyDataForm = document.getElementById('daily-data-form');
+    const notesInput = document.getElementById('notes');
+    const initialCountInputSection = document.getElementById('initial-count-section');
+    const initialChickCountInput = document.getElementById('initial-chick-count');
+    const actualWaterInput = document.getElementById('actual-water'); 
+    const breederNameInput = document.getElementById('breeder-name'); 
 
-    // معالج زر "بدء التسجيل" داخل المودال
+    const aiModal = document.getElementById('ai-modal');
+    const openAiModalBtn = document.getElementById('open-ai-modal-btn');
+    const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
+    const analyzeSymptomsBtn = document.getElementById('analyze-symptoms-btn');
+    const symptomsInput = document.getElementById('symptoms-input');
+    const imageInput = document.getElementById('image-input'); 
+    const aiResultDiv = document.getElementById('ai-result');
+    const analyzeBtnText = document.getElementById('analyze-btn-text');
+    const analyzeLoader = document.getElementById('analyze-loader');
+    
+    const confirmResetModal = document.getElementById('confirm-reset-modal');
+    const confirmResetBtn = document.getElementById('confirm-reset-btn');
+    const cancelResetBtn = document.getElementById('cancel-reset-btn');
+
+    const MAX_GUIDE_AGE = broilerGuideData.length - 1; 
+
+    async function loadFlockDataFromServer(flockId) {
+        // تم تعديل المسار هنا
+        const response = await fetch(`/api/flock/all-data`);
+        if (!response.ok) {
+            throw new Error(`فشل في جلب البيانات: ${response.status}`);
+        }
+        const allData = await response.json();
+        
+        const flock = allData.find(f => f.flockId === flockId);
+        return flock || null;
+    }
+
+    async function saveRecordToServer(record) {
+        if (!record.flockId) {
+            throw new Error("يجب تحديد معرّف القطيع (flockId) للحفظ.");
+        }
+        
+        // تم تعديل المسار هنا
+        const response = await fetch(`/api/records/save`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(record)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "حدث خطأ غير معروف أثناء حفظ البيانات على الخادم.");
+        }
+
+        return result; 
+    }
+
+    async function loadData() {
+        if (!currentFlockId) return; 
+
+        document.getElementById('breeder-name').value = currentBreederName;
+        document.getElementById('current-breeder-display').textContent = `المربي: ${currentBreederName}`;
+        
+        try {
+            const data = await loadFlockDataFromServer(currentFlockId);
+            if (data) {
+                flockData = {
+                    ...DEFAULT_FLOCK_DATA,
+                    ...data,
+                    dailyRecords: data.dailyRecords || []
+                };
+                document.getElementById('initial-count-section').classList.add('hidden');
+            } else {
+                document.getElementById('initial-count-section').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error("خطأ في تحميل البيانات:", error);
+        }
+        updateDashboard(flockData.currentAge);
+    }
+    
+    function updateDashboard(ageInDays) {
+        // ... (كود updateDashboard كما هو) ...
+        if (!flockData.startDate) return;
+        
+        const safeAge = Math.min(Math.max(0, ageInDays), MAX_GUIDE_AGE);
+        flockData.currentAge = safeAge; 
+
+        const guide = broilerGuideData[safeAge] || broilerGuideData[MAX_GUIDE_AGE];
+
+        if (!flockData.initialChickCount || flockData.initialChickCount === 0) {
+            initialCountInputSection.classList.remove('hidden');
+            flockData.currentAge = 0; 
+            flockAgeInput.value = 0;
+            currentAgeDisplay.textContent = 0;
+            initialChickCountInput.value = flockData.initialChickCount || ''; 
+            dataEntryMessage.textContent = "يرجى إدخال العدد الأولي للقطيع لمرة واحدة قبل البدء بتسجيل البيانات اليومية.";
+            dataEntryMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            dataEntryMessage.classList.add('text-indigo-600');
+        } else {
+            document.getElementById('initial-count-section').classList.add('hidden');
+        }
+        
+        flockAgeInput.value = safeAge;
+        currentAgeDisplay.textContent = safeAge;
+
+        document.getElementById('target-temp').textContent = `${guide.temp}°`;
+        document.getElementById('target-humidity').textContent = `${guide.humidity}%`;
+        document.getElementById('target-weight').textContent = guide.weight; 
+        document.getElementById('target-weight-grams').textContent = `${guide.weight} غرام`;
+        document.getElementById('target-daily-feed').textContent = `${guide.dailyFeed} غرام`;
+        document.getElementById('target-fcr').textContent = guide.fcr.toFixed(3); 
+
+        dailyTipsContent.textContent = getDailyTips(safeAge);
+        calculateAndDisplayMetrics(safeAge);
+
+        const dayRecord = flockData.dailyRecords.find(r => r.day === safeAge);
+
+        if(dayRecord){
+            dataEntryMessage.textContent = `بيانات اليوم ${safeAge} مسجلة. يمكنك تعديلها أو الانتقال ليوم آخر.`;
+            dataEntryMessage.classList.remove('hidden', 'text-red-600', 'text-indigo-600');
+            dataEntryMessage.classList.add('text-green-600');
+
+            document.getElementById('actual-feed').value = dayRecord.feedKg;
+            document.getElementById('mortality-count').value = dayRecord.mortality;
+            actualWaterInput.value = dayRecord.waterIntake || ''; 
+            document.getElementById('actual-weight').value = dayRecord.avgWeight || '';
+            notesInput.value = dayRecord.notes || ''; 
+
+        } else if (flockData.initialChickCount) {
+            dataEntryMessage.classList.add('hidden');
+             document.getElementById('actual-feed').value = '';
+             document.getElementById('mortality-count').value = '0';
+             actualWaterInput.value = ''; 
+             document.getElementById('actual-weight').value = '';
+             notesInput.value = ''; 
+        }
+    }
+
+    function calculateAndDisplayMetrics(upToAge) {
+        // (كود calculateAndDisplayMetrics كما هو)
+        const initialCount = flockData.initialChickCount || 0;
+        if (initialCount === 0) { 
+            document.getElementById('total-mortality-rate').textContent = `0.00%`;
+            document.getElementById('actual-fcr').textContent = `0.000`; 
+            document.getElementById('actual-cumulative-feed').textContent = `0.00`;
+            return;
+        }
+
+        let totalMortality = 0;
+        let totalFeedKg = 0;
+        
+        const recordsUpToDate = flockData.dailyRecords.filter(r => r.day <= upToAge);
+
+        recordsUpToDate.forEach(record => {
+            totalMortality += record.mortality;
+            totalFeedKg += record.feedKg;
+        });
+        
+        const currentCount = initialCount - totalMortality;
+
+        const lastWeightRecord = [...recordsUpToDate]
+            .filter(r => r.avgWeight !== null && r.avgWeight > 0)
+            .pop();
+        
+        const currentAvgWeightGrams = lastWeightRecord ? lastWeightRecord.avgWeight : flockData.startWeight;
+        const currentAvgWeightKg = (currentAvgWeightGrams / 1000); 
+
+        const totalLiveWeightKg = currentAvgWeightKg * currentCount;
+        const totalWeightGainKg = totalLiveWeightKg - (initialCount * (flockData.startWeight / 1000));
+        
+        let fcr = (totalWeightGainKg > 0) ? (totalFeedKg / totalWeightGainKg) : 0;
+        
+        const mortalityRate = (initialCount > 0) ? (totalMortality / initialCount) * 100 : 0;
+        
+        document.getElementById('total-mortality-rate').textContent = `${mortalityRate.toFixed(2)}%`;
+        document.getElementById('actual-fcr').textContent = fcr.toFixed(3); 
+        document.getElementById('actual-cumulative-feed').textContent = totalFeedKg.toFixed(2);
+    }
+    
+    
+    function setupApplication() {
+        currentBreederName = localStorage.getItem('breederName');
+        
+        if (currentBreederName) {
+            currentFlockId = createFlockId(currentBreederName);
+            initialSetupModal.classList.add('hidden');
+            dashboardScreen.classList.remove('hidden');
+            loadData();
+        } else {
+            initialSetupModal.classList.remove('hidden');
+            dashboardScreen.classList.add('hidden');
+        }
+    }
+
+    // --- معالج زر "بدء التسجيل" داخل المودال (يبقى كما هو) ---
     startAppBtn.onclick = () => {
         const name = initialBreederNameInput.value.trim();
         if (name.length < 3) {
@@ -412,44 +546,99 @@ document.addEventListener('DOMContentLoaded', () => {
         loadData();
     };
 
-    // معالج فورم حفظ البيانات (لا تغيير إلا في دالة saveRecordToServer التي تم تعديلها في الأعلى)
+    // --- معالج فورم حفظ البيانات (معدل) ---
     document.getElementById('daily-data-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        // ... (كود جمع البيانات)
         
-        const day = parseInt(document.getElementById('flock-age-input').value);
-        
-        // ... (جمع البيانات...)
+        const age = flockData.currentAge;
+        const breederName = document.getElementById('breeder-name').value.trim();
+        const initialChickCount = parseInt(initialChickCountInput.value) || 0;
+        const waterIntake = parseFloat(document.getElementById('actual-water').value) || 0; 
+        const feedKg = parseFloat(document.getElementById('actual-feed').value) || 0;
+        const mortality = parseInt(document.getElementById('mortality-count').value) || 0;
+        const avgWeight = document.getElementById('actual-weight').value === '' ? null : parseFloat(document.getElementById('actual-weight').value);
+        const notes = document.getElementById('notes').value.trim();
 
-        const record = {
-            flockId: currentFlockId, // إضافة الـ ID
-            breederName: currentBreederName, // إضافة اسم المربي
-            day: day,
-            initialChickCount: initialCountValue, // سيتم استخدامه فقط في أول عملية حفظ
-            feedKg: parseFloat(document.getElementById('actual-feed').value) || 0,
-            mortality: parseInt(document.getElementById('mortality-count').value) || 0,
-            waterIntake: parseFloat(document.getElementById('actual-water').value) || 0,
-            avgWeight: document.getElementById('actual-weight').value ? parseFloat(document.getElementById('actual-weight').value) : null,
-            notes: document.getElementById('notes').value.trim()
+        if (!flockData.initialChickCount && initialChickCount <= 0) {
+            dataEntryMessage.textContent = 'الرجاء إدخال العدد الأولي للقطيع.';
+            dataEntryMessage.classList.remove('hidden', 'text-green-600', 'text-indigo-600');
+            dataEntryMessage.classList.add('text-red-600');
+            setTimeout(() => { dataEntryMessage.classList.add('hidden'); }, 3000);
+            return;
+        }
+        
+        if (!breederName) {
+            dataEntryMessage.textContent = 'الرجاء إدخال اسم المربي.';
+            dataEntryMessage.classList.remove('hidden', 'text-green-600');
+            dataEntryMessage.classList.add('text-red-600');
+            setTimeout(() => { dataEntryMessage.classList.add('hidden'); }, 3000);
+            return;
+        }
+
+        if (feedKg === 0 && mortality === 0 && waterIntake === 0 && (avgWeight === null || avgWeight === 0) && notes === '') {
+            dataEntryMessage.textContent = 'الرجاء إدخال بيانات (علف أو وفيات أو ماء أو ملاحظات) لحفظ سجل اليوم.';
+            dataEntryMessage.classList.remove('hidden', 'text-green-600');
+            dataEntryMessage.classList.add('text-red-600');
+            setTimeout(() => { dataEntryMessage.classList.add('hidden'); }, 3000);
+            return;
+        }
+
+        const recordToSend = { 
+            flockId: currentFlockId, 
+            day: age, 
+            breederName, 
+            initialChickCount: flockData.initialChickCount || initialChickCount, 
+            waterIntake, 
+            feedKg, 
+            mortality, 
+            avgWeight, 
+            notes 
         };
 
         try {
-            await saveRecordToServer(record); // استدعاء الدالة المعدلة
-            // ... (رسائل النجاح)
-            
-            // تحديث الواجهة بعد الحفظ
-            loadData(); 
+            await saveRecordToServer(recordToSend); 
+            await loadData(); 
+
+            updateDashboard(age);
+            dataEntryMessage.textContent = `✅ تم حفظ بيانات اليوم ${age} بنجاح على السيرفر!`;
+            dataEntryMessage.classList.remove('text-blue-600');
+            dataEntryMessage.classList.add('text-green-600');
 
         } catch (error) {
-            // ... (رسائل الخطأ)
-             alert(`خطأ في الحفظ: ${error.message}`);
+            dataEntryMessage.textContent = `🛑 خطأ في الحفظ: ${error.message}`;
+            dataEntryMessage.classList.remove('text-blue-600', 'text-green-600');
+            dataEntryMessage.classList.add('text-red-600');
         }
     });
 
+    async function performReset() {
+        localStorage.removeItem('breederName');
+        currentFlockId = null;
+        currentBreederName = null;
+        flockData = {...DEFAULT_FLOCK_DATA, currentAge: 0, dailyRecords: []}; 
+
+        confirmResetModal.classList.add('hidden');
+        
+        setupApplication();
+
+        dataEntryMessage.textContent = `تم إعادة تعيين التطبيق بنجاح. يرجى إدخال اسمك الجديد للبدء.`;
+        dataEntryMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
+        dataEntryMessage.classList.add('text-orange-600');
+        setTimeout(() => { dataEntryMessage.classList.add('hidden'); }, 7000);
+    }
+    
     // ... (بقية معالجات الأحداث)
+
+    resetButton.addEventListener('click', () => { confirmResetModal.classList.remove('hidden'); });
+    confirmResetBtn.addEventListener('click', performReset);
+    // (بقية الدوال المساعدة)
+    function fileToGenerativePart(file) { /* ... */ }
+    function formatGeminiResponse(text) { /* ... */ }
+    async function analyzeSymptomsWithGemini(symptoms, imageFile = null) { /* ... */ }
+    // ...
+
+    setupApplication(); 
 });
-
-
 </script>
 </body>
 </html>
