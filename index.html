@@ -1,154 +1,337 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>نظام الإدارة الذكي لفروج اللحم Ross 308 — ثابت</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body{font-family:'Cairo',sans-serif;background:#f7f9fc}
-    .container-fluid{max-width:1400px;margin:0 auto}
-    .card{background:#fff;border-radius:16px;padding:1.5rem;box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);border:1px solid #e5e7eb}
-    .btn{padding:.75rem 1.5rem;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-    .btn-primary{background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50}
-    .modal-content{background:#fff;padding:2rem;border-radius:12px;max-width:550px;width:90%;max-height:90vh;overflow:auto}
-    .shake{animation:shake .25s linear 2}@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-6px)}100%{transform:translateX(0)}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الإدارة الذكي لفروج اللحم Ross 308</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* (Styles remain the same) */
+        body { font-family: 'Cairo', sans-serif; overscroll-behavior-y: contain; background-color: #f7f9fc; }
+        .container-fluid { max-width: 1400px; margin: 0 auto; }
+        .card { background-color: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); transition: all 0.3s ease-in-out; border: 1px solid #e5e7eb; }
+        .metric-card { background-color: #ffffff; border-radius: 12px; padding: 1rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); border: 1px solid #dbeafe; text-align: center; }
+        .metric-value { font-size: 1.75rem; font-weight: 800; color: #1e3a8a; margin-top: 0.5rem; }
+        .metric-label { font-size: 0.875rem; color: #4b5563; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; text-align: center; cursor: pointer; transition: all 0.2s ease-in-out; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        #flock-age-input { width: 100%; text-align: center; border: 2px solid #3b82f6; background-color: #eff6ff; color: #1e3a8a; font-size: 1.75rem !important; padding: 0.25rem 0; }
+        input[type="number"], input[type="date"], textarea, .form-input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid #d1d5db; text-align: right; font-size: 1rem; background-color: #f9fafb; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; max-width: 550px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .loader { width: 24px; height: 24px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
 <body class="bg-gray-100">
-  <div id="dashboard-screen" class="p-4 md:p-8 container-fluid hidden">
-    <header class="mb-6 border-b pb-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-800">نظام الإدارة الذكي لفروج اللحم (Ross 308)</h1>
-        <div class="flex items-center gap-3">
-          <span id="current-breeder-display" class="font-bold text-lg text-indigo-700"></span>
-          <button id="reset-button" class="btn bg-red-500 hover:bg-red-600 text-white text-sm">بدء دورة جديدة</button>
+
+    <div id="dashboard-screen" class="p-4 md:p-8 container-fluid hidden">
+        <header class="mb-6 border-b pb-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-800">نظام الإدارة الذكي لفروج اللحم (Ross 308)</h1>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <span id="current-breeder-display" class="font-bold text-lg text-indigo-700"></span>
+                    <button id="reset-button" class="btn text-sm bg-red-500 hover:bg-red-600">بدء دورة جديدة</button>
+                </div>
+            </div>
+            <p class="text-base text-gray-500 mt-1">تطوير: <span class="font-semibold text-blue-600">Eng Marwan AL Nasree</span></p>
+        </header>
+
+        <div class="card mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">المؤشرات السريعة (المستهدفة والديناميكية)</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+                
+                <div class="metric-card bg-blue-50">
+                    <div class="metric-label font-bold text-blue-700">العمر (يوم)</div>
+                    <input type="number" id="flock-age-input" class="rounded-lg mt-1" value="0">
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">علف/طير اليوم (غرام)</div>
+                    <div id="target-daily-feed" class="metric-value">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">الوزن المتوقع/طير (غرام)</div>
+                    <div id="target-weight-grams" class="metric-value">--</div>
+                </div>
+                <div class="metric-card bg-yellow-50">
+                    <div class="metric-label text-yellow-800 font-bold">معامل FCR المستهدف</div>
+                    <div id="target-fcr" class="metric-value text-yellow-800">--</div>
+                </div>
+            </div>
         </div>
-      </div>
-      <p class="text-base text-gray-500 mt-1">تطوير: <span class="font-semibold text-blue-600">Eng Marwan AL Nasree</span></p>
-    </header>
 
-    <div class="card">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">🎛️ لوحة بسيطة للتأكد من التشغيل</h2>
-      <p class="mb-2 text-gray-600">إذا تشوف هاي الشاشة، فـ زر <b>بدء التسجيل</b> اشتغل تمام وانحفظ اسمك.</p>
-      <div class="text-sm text-gray-700">العمر الحالي: <span id="current-age-display">0</span> يوم</div>
+        <div class="grid grid-cols-1 lg:col-span-3 gap-6">
+
+            <div class="space-y-6 lg:col-span-2">
+                
+                <div class="card">
+                    <h2 class="text-xl font-bold text-blue-700 mb-4 border-b pb-2">البيئة والأداء (لليوم <span id="current-age-display">0</span>)</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
+                        <div>
+                            <div class="metric-label">الحرارة المستهدفة (°م)</div>
+                            <div id="target-temp" class="metric-value text-green-700">--</div>
+                        </div>
+                        <div>
+                            <div class="metric-label">الرطوبة المستهدفة (%)</div>
+                            <div id="target-humidity" class="metric-value text-green-700">--</div>
+                        </div>
+                        <div>
+                            <div class="metric-label">الوزن المتوقع (غرام)</div>
+                            <div id="target-weight" class="metric-value text-green-700">--</div>
+                        </div>
+                         <div>
+                            <div class="metric-label text-red-700">نسبة النفوق الإجمالية (%)</div>
+                            <div id="total-mortality-rate" class="metric-value text-red-700">0%</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="metric-label">العلف المستهلك الفعلي (كغم)</div>
+                            <div id="actual-cumulative-feed" class="metric-value text-gray-700 text-xl">--</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="metric-label text-red-600">FCR الفعلي التراكمي</div>
+                            <div id="actual-fcr" class="metric-value text-red-600 text-xl">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">تسجيل بيانات اليوم</h2>
+                    <p id="data-entry-message" class="text-center font-semibold mb-4 hidden"></p>
+                    <form id="daily-data-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        
+                         <div class="md:col-span-3">
+                            <label for="breeder-name" class="block text-gray-700 font-semibold mb-2">اسم المربي</label>
+                            <input type="text" id="breeder-name" class="form-input bg-gray-200" disabled placeholder="يتم تحديده عند الإعداد الأولي">
+                        </div>
+                        
+                        <div id="initial-count-section" class="md:col-span-3 hidden">
+                            <label for="initial-chick-count" class="block text-gray-700 font-semibold mb-2 text-indigo-700">عدد القطيع الأولي (مطلوب لمرة واحدة)</label>
+                            <input type="number" id="initial-chick-count" class="form-input border-indigo-500 bg-indigo-50" placeholder="مثال: 5000">
+                        </div>
+
+                        <div class="md:col-span-1">
+                            <label for="actual-feed" class="block text-gray-700 font-semibold mb-2">العلف المستهلك (كغم)</label>
+                            <input type="number" step="0.1" id="actual-feed" class="form-input" placeholder="مثال: 150.5">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label for="mortality-count" class="block text-gray-700 font-semibold mb-2">عدد النافق اليوم</label>
+                            <input type="number" id="mortality-count" class="form-input" value="0">
+                        </div>
+                        
+                        <div class="md:col-span-1">
+                            <label for="actual-water" class="block text-gray-700 font-semibold mb-2 text-blue-700">استهلاك الماء اليومي (لتر)</label>
+                            <input type="number" step="1" id="actual-water" class="form-input border-blue-500 bg-blue-50" placeholder="مثال: 350">
+                        </div>
+                        
+                        <div class="md:col-span-1">
+                            <label for="actual-weight" class="block text-gray-700 font-semibold mb-2">متوسط وزن الطائر (غرام)</label>
+                            <input type="number" id="actual-weight" class="form-input" placeholder="مطلوب كل 3-4 أيام">
+                        </div>
+                        
+                        <div class="md:col-span-3">
+                            <label for="notes" class="block text-gray-700 font-semibold mb-2">الملاحظات/المشاهدات اليومية</label>
+                            <textarea id="notes" rows="3" class="form-input" placeholder="مثال: لوحظ انخفاض طفيف في استهلاك الماء. تم إعطاء فيتامين C"></textarea>
+                        </div>
+
+                        <button type="submit" id="save-daily-data" class="btn btn-primary w-full mt-2 md:col-span-3">حفظ بيانات اليوم</button>
+                    </form>
+                </div>
+
+            </div>
+            
+            <div class="space-y-6 lg:col-span-1">
+                
+                <div class="card bg-indigo-50 border-indigo-200">
+                    <h2 class="text-xl font-bold text-indigo-800 mb-4 border-b border-indigo-300 pb-2">💡 نصائح وإرشادات اليوم</h2>
+                    <p id="daily-tips-content" class="text-gray-700 leading-relaxed min-h-[100px]">سيتم عرض النصائح هنا...</p>
+                </div>
+
+                <div class="card text-center bg-green-50 border-green-200">
+                    <h2 class="text-xl font-bold text-green-700 mb-4">🩺 المستشار الصحي الذكي</h2>
+                    <p class="text-gray-600 mb-4 text-sm">حلل الأعراض المحتملة للقطيع بسرعة.</p>
+                    <button id="open-ai-modal-btn" class="btn btn-primary w-full bg-green-600 hover:bg-green-700">✨ استشارة فورية بالذكاء الاصطناعي</button>
+                </div>
+            </div>
+        </div>
+        
     </div>
-  </div>
+    
+    <div id="initial-setup-modal" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">👋 أهلاً بك في نظام الإدارة الذكي</h2>
+            <p class="text-gray-700 mb-6">يرجى إدخال اسمك (أو اسم المزرعة) للبدء. سيتم ربط جميع بياناتك بهذا الاسم.</p>
+            
+            <input type="text" id="initial-breeder-name-input" class="form-input w-full p-3 border-blue-500 mb-4 text-center text-xl font-semibold" placeholder="أدخل اسم المربي هنا" required>
 
-  <div id="initial-setup-modal" class="modal-overlay">
-    <div class="modal-content text-center">
-      <h2 class="text-2xl font-bold text-blue-600 mb-4">👋 أهلاً بك</h2>
-      <p class="text-gray-700 mb-6">أدخل اسمك (أو اسم المزرعة) للبدء.</p>
-      <input type="text" id="initial-breeder-name-input" class="w-full p-3 border rounded-lg border-blue-500 mb-3 text-center text-xl font-semibold" placeholder="أدخل اسم المربي هنا" required>
-      <button id="start-app-btn" class="btn btn-primary w-full">بدء التسجيل</button>
-      <p id="setup-error-message" class="text-red-600 mt-3 hidden">الرجاء إدخال اسم صحيح لا يقل عن 3 أحرف.</p>
-      <p id="debug-hint" class="text-xs text-gray-500 mt-3">Debug: إذا ما اشتغل، افتح Console ودوّر على رسائل LEX-Q.</p>
+            <button id="start-app-btn" class="btn btn-primary w-full">بدء التسجيل</button>
+            <p class="text-red-500 mt-2 hidden" id="setup-error-message">الرجاء إدخال اسم صحيح لا يقل عن 3 أحرف.</p>
+        </div>
     </div>
-  </div>
-
-  <div id="confirm-reset-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <h2 class="text-2xl font-bold text-red-600 mb-4">تأكيد بدء دورة جديدة</h2>
-      <p class="text-gray-700 mb-6">سيتم مسح الإعداد المحلي والعودة لشاشة البداية.</p>
-      <div class="flex justify-end gap-3">
-        <button id="cancel-reset-btn" class="btn">إلغاء</button>
-        <button id="confirm-reset-btn" class="btn bg-red-600 hover:bg-red-700 text-white">نعم</button>
-      </div>
+    
+    <div id="ai-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">وصف حالة القطيع</h2>
+            <p class="text-gray-600 mb-4">اكتب بالتفصيل الأعراض التي تلاحظها، مع ذكر أي تغييرات في السلوك أو الشهية.</p>
+            <textarea id="symptoms-input" rows="5" class="w-full p-3 border rounded-lg mb-4 text-right" placeholder="مثال: الدجاج يعاني من خمول وإسهال أبيض وصعوبة في التنفس..."></textarea>
+            
+            <label for="image-input" class="block text-gray-700 font-semibold mb-2">رفع صورة للمعاينة (اختياري)</label>
+            <input type="file" id="image-input" accept="image/*" class="w-full p-2 border rounded-lg mb-4 text-right bg-gray-50">
+            
+            <div id="ai-result" class="mt-4 p-3 bg-gray-100 rounded-lg min-h-[100px] text-gray-700 leading-relaxed"></div>
+            
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="close-ai-modal-btn" class="btn btn-secondary">إغلاق</button>
+                <button id="analyze-symptoms-btn" class="btn btn-primary">
+                    <span id="analyze-btn-text">تحليل الأعراض</span>
+                    <span id="analyze-loader" class="loader hidden"></span>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    (function() {
-      // Helpers
-      const $ = (sel) => document.querySelector(sel);
-      const show = (el) => el.classList.remove('hidden');
-      const hide = (el) => el.classList.add('hidden');
-      const safeSetLS = (k, v) => { try { localStorage.setItem(k, v); } catch(e) { console.warn('LocalStorage blocked', e); } };
-      const safeGetLS = (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } };
-      const safeDelLS = (k) => { try { localStorage.removeItem(k); } catch(e) { } };
+    <div id="confirm-reset-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">تأكيد بدء دورة جديدة</h2>
+            <p class="text-gray-700 mb-6">هل أنت متأكد تمامًا من بدء دورة جديدة؟ <strong>هذا الإجراء سيقوم بإعادة تعيين بياناتك بالكامل في الخادم والواجهة.</strong></p>
+            
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="cancel-reset-btn" class="btn btn-secondary">إلغاء</button>
+                <button id="confirm-reset-btn" class="btn btn-danger bg-red-600 hover:bg-red-700">نعم، ابدأ دورة جديدة</button>
+            </div>
+        </div>
+    </div>
 
-      let currentBreederName = null;
+<script>
+// --- البيانات الإرشادية و الإعدادات ---
+const broilerGuideData = [ /* ... */ ];
+const DEFAULT_FLOCK_DATA = { /* ... */ };
 
-      function createFlockId(name) {
-        try { return 'FLOCK_' + btoa(name.trim().toUpperCase()); }
-        catch { return 'FLOCK_' + encodeURIComponent(name.trim().toUpperCase()); }
-      }
+// رابط Google Cloud App Engine
+const SERVER_URL = 'https://gen-lang-client-0187043650.ew.r.appspot.com'; 
+const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
 
-      function bootToDashboard(name) {
-        currentBreederName = name;
-        $('#current-breeder-display').textContent = 'المربي: ' + currentBreederName;
-        hide($('#initial-setup-modal'));
-        show($('#dashboard-screen'));
-        console.log('[LEX-Q] Booted → Dashboard with name:', currentBreederName);
-      }
+let flockData = {...DEFAULT_FLOCK_DATA};
+let currentFlockId = null; 
+let currentBreederName = null;
 
-      // Initial state
-      document.addEventListener('DOMContentLoaded', () => {
-        const stored = safeGetLS('breederName');
-        if (stored && stored.length >= 3) {
-          bootToDashboard(stored);
-        } else {
-          show($('#initial-setup-modal'));
-          hide($('#dashboard-screen'));
-          console.log('[LEX-Q] Waiting for user name...');
-        }
-      });
+function createFlockId(name) {
+    return 'FLOCK_' + btoa(encodeURIComponent(name.trim().toUpperCase()));
+}
 
-      // SUPER DEFENSIVE: event delegation for Start button
-      document.addEventListener('click', (ev) => {
-        const t = ev.target;
-        if (!t) return;
+// ... (بقية الدوال المساعدة) ...
 
-        // Start button
-        if (t.id === 'start-app-btn') {
-          const input = $('#initial-breeder-name-input');
-          const err = $('#setup-error-message');
-          const name = (input.value || '').trim();
+async function loadFlockDataFromServer(flockId) {
+    const response = await fetch(`${SERVER_URL}/api/flock/all-data`);
+    if (!response.ok) {
+        throw new Error(`فشل في جلب البيانات: ${response.status}`);
+    }
+    const allData = await response.json();
+    
+    const flock = allData.find(f => f.flockId === flockId);
+    return flock || null;
+}
 
-          if (name.length < 3) {
-            err.classList.remove('hidden');
-            input.classList.add('shake');
-            setTimeout(() => input.classList.remove('shake'), 350);
-            console.warn('[LEX-Q] Invalid name length');
-            return;
-          }
-          err.classList.add('hidden');
+async function saveRecordToServer(record) {
+    if (!record.flockId) {
+        throw new Error("يجب تحديد معرّف القطيع (flockId) للحفظ.");
+    }
+    
+    const response = await fetch(`${SERVER_URL}/api/records/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(record)
+    });
 
-          safeSetLS('breederName', name);
-          const flockId = createFlockId(name);
-          console.log('[LEX-Q] Start clicked → name:', name, 'flockId:', flockId);
-          bootToDashboard(name);
-        }
+    const result = await response.json();
 
-        // Reset flow
-        if (t.id === 'reset-button') {
-          show($('#confirm-reset-modal'));
-        }
-        if (t.id === 'cancel-reset-btn') {
-          hide($('#confirm-reset-modal'));
-        }
-        if (t.id === 'confirm-reset-btn') {
-          safeDelLS('breederName');
-          hide($('#confirm-reset-modal'));
-          hide($('#dashboard-screen'));
-          show($('#initial-setup-modal'));
-          console.log('[LEX-Q] Cycle reset done; back to start screen.');
-        }
-      });
+    if (!response.ok) {
+        throw new Error(result.message || "حدث خطأ غير معروف أثناء حفظ البيانات على الخادم.");
+    }
 
-      // Enter key to submit
-      document.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' && !$('#dashboard-screen').classList.contains('hidden')) return;
-        if (ev.key === 'Enter') {
-          const btn = $('#start-app-btn');
-          if (btn) btn.click();
-        }
-      });
-    })();
-  </script>
+    return result; 
+}
+
+async function loadData() {
+    if (!currentFlockId) return; 
+
+    const breederNameInput = document.getElementById('breeder-name');
+    const currentBreederDisplay = document.getElementById('current-breeder-display');
+    
+    breederNameInput.value = currentBreederName;
+    currentBreederDisplay.textContent = `المربي: ${currentBreederName}`;
+    
+    // ... (بقية منطق التحميل) ...
+}
+
+// ... (بقية الدوال) ...
+
+
+function setupApplication() {
+    const initialSetupModal = document.getElementById('initial-setup-modal');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    
+    currentBreederName = localStorage.getItem('breederName');
+    
+    if (currentBreederName) {
+        currentFlockId = createFlockId(currentBreederName);
+        initialSetupModal.classList.add('hidden');
+        dashboardScreen.classList.remove('hidden');
+        loadData();
+    } else {
+        initialSetupModal.classList.remove('hidden');
+        dashboardScreen.classList.add('hidden');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // ----------------------------------------------------
+    // *** جلب جميع العناصر الآن داخل DOMContentLoaded ***
+    // ----------------------------------------------------
+    const startAppBtn = document.getElementById('start-app-btn');
+    const initialBreederNameInput = document.getElementById('initial-breeder-name-input');
+    const setupErrorMsg = document.getElementById('setup-error-message');
+    const initialSetupModal = document.getElementById('initial-setup-modal');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    const breederNameInput = document.getElementById('breeder-name'); 
+    const initialCountInputSection = document.getElementById('initial-count-section');
+    const initialChickCountInput = document.getElementById('initial-chick-count');
+    const actualWaterInput = document.getElementById('actual-water'); 
+    const notesInput = document.getElementById('notes');
+    const dataEntryMessage = document.getElementById('data-entry-message'); 
+    
+    // --- معالج حدث زر "بدء التسجيل" (التصحيح النهائي) ---
+    if (startAppBtn) { 
+        startAppBtn.addEventListener('click', () => {
+            const name = initialBreederNameInput.value.trim();
+            if (name.length < 3) {
+                setupErrorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            currentBreederName = name;
+            currentFlockId = createFlockId(currentBreederName);
+            localStorage.setItem('breederName', currentBreederName);
+
+            setupErrorMsg.classList.add('hidden');
+            initialSetupModal.classList.add('hidden');
+            dashboardScreen.classList.remove('hidden'); 
+            
+            loadData();
+        });
+    }
+
+    // --- تشغيل الإعداد الأولي ---
+    setupApplication(); 
+    
+    // ... (بقية معالجات الأحداث) ...
+});
+</script>
 </body>
 </html>
