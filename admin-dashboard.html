@@ -128,8 +128,8 @@
         }
         
         try {
-            // نستخدم مسار Vercel الجديد
-            const response = await fetch(`/api/index/records/delete`, {
+            // تم تعديل المسار هنا
+            const response = await fetch(`/api/records/delete`, { 
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ flockId, day })
@@ -189,8 +189,8 @@
         };
 
         try {
-            // نستخدم مسار Vercel الجديد
-            const response = await fetch(`/api/index/records/update`, {
+            // تم تعديل المسار هنا
+            const response = await fetch(`/api/records/update`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData)
@@ -219,8 +219,8 @@
         flockDetailsDiv.innerHTML = '';
 
         try {
-            // نستخدم مسار Vercel الجديد
-            const response = await fetch(`/api/index/flock/all-data`);
+            // تم تعديل المسار هنا
+            const response = await fetch(`/api/flock/all-data`);
             if (!response.ok) {
                 throw new Error(`فشل في جلب البيانات: ${response.status} ${response.statusText}`);
             }
