@@ -224,7 +224,7 @@ const broilerGuideData = [
     { day: 13, weight: 435, dailyFeed: 60, cumulativeFeed: 438, fcr: 1.20, temp: 28, humidity: 55 },
     { day: 14, weight: 488, dailyFeed: 65, cumulativeFeed: 503, fcr: 1.22, temp: 28, humidity: 55 },
     { day: 15, weight: 545, dailyFeed: 70, cumulativeFeed: 573, fcr: 1.24, temp: 28, humidity: 55 },
-    { day: 16, weight: 605, dailyFeed: 76, cumulative: 649, fcr: 1.26, temp: 27, humidity: 55 },
+    { day: 16, weight: 605, dailyFeed: 76, cumulativeFeed: 649, fcr: 1.26, temp: 27, humidity: 55 },
     { day: 17, weight: 670, dailyFeed: 82, cumulativeFeed: 731, fcr: 1.28, temp: 27, humidity: 55 },
     { day: 18, weight: 735, dailyFeed: 88, cumulativeFeed: 819, fcr: 1.30, temp: 27, humidity: 55 },
     { day: 19, weight: 805, dailyFeed: 94, cumulativeFeed: 913, fcr: 1.32, temp: 26, humidity: 55 },
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_GUIDE_AGE = broilerGuideData.length - 1; 
 
     async function loadFlockDataFromServer(flockId) {
-        // تم تعديل المسار هنا
+        // تم تعديل المسار هنا: /api/flock/all-data
         const response = await fetch(`/api/flock/all-data`);
         if (!response.ok) {
             throw new Error(`فشل في جلب البيانات: ${response.status}`);
@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error("يجب تحديد معرّف القطيع (flockId) للحفظ.");
         }
         
-        // تم تعديل المسار هنا
+        // تم تعديل المسار هنا: /api/records/save
         const response = await fetch(`/api/records/save`, {
             method: 'POST',
             headers: {
@@ -414,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updateDashboard(ageInDays) {
-        // ... (كود updateDashboard كما هو) ...
         if (!flockData.startDate) return;
         
         const safeAge = Math.min(Math.max(0, ageInDays), MAX_GUIDE_AGE);
@@ -472,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateAndDisplayMetrics(upToAge) {
-        // (كود calculateAndDisplayMetrics كما هو)
         const initialCount = flockData.initialChickCount || 0;
         if (initialCount === 0) { 
             document.getElementById('total-mortality-rate').textContent = `0.00%`;
@@ -527,7 +525,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- معالج زر "بدء التسجيل" داخل المودال (يبقى كما هو) ---
     startAppBtn.onclick = () => {
         const name = initialBreederNameInput.value.trim();
         if (name.length < 3) {
@@ -546,7 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadData();
     };
 
-    // --- معالج فورم حفظ البيانات (معدل) ---
     document.getElementById('daily-data-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -627,15 +623,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { dataEntryMessage.classList.add('hidden'); }, 7000);
     }
     
-    // ... (بقية معالجات الأحداث)
-
-    resetButton.addEventListener('click', () => { confirmResetModal.classList.remove('hidden'); });
-    confirmResetBtn.addEventListener('click', performReset);
-    // (بقية الدوال المساعدة)
-    function fileToGenerativePart(file) { /* ... */ }
-    function formatGeminiResponse(text) { /* ... */ }
-    async function analyzeSymptomsWithGemini(symptoms, imageFile = null) { /* ... */ }
-    // ...
+    
+    // ... (بقية معالجات الأحداث) ...
 
     setupApplication(); 
 });
