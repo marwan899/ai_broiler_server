@@ -1,0 +1,28 @@
+{
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { 
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    { 
+      "src": "/admin-dashboard.html", 
+      "dest": "/admin-dashboard.html" 
+    },
+    { 
+      "src": "/(.*)",
+      "dest": "/index (1).html" 
+    }
+  ],
+  "rewrites": [
+    { 
+      "source": "/api/index/(.*)", 
+      "destination": "/api/index.js" 
+    }
+  ]
+}
