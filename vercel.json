@@ -3,19 +3,24 @@
     {
       "src": "api/index.js",
       "use": "@vercel/node"
-    { 
-      "src": "/admin-dashboard.html", 
-      "dest": "/admin-dashboard.html" 
-    },
-    { 
-      "src": "/(.*)",
-      "dest": "/index (1).html" 
     }
   ],
   "rewrites": [
     { 
-      "source": "/api/index/(.*)", 
+      "source": "/api/index/records/(.*)",
       "destination": "/api/index.js" 
+    },
+    { 
+      "source": "/api/index/flock/(.*)",
+      "destination": "/api/index.js" 
+    },
+    { 
+      "source": "/admin-dashboard.html", 
+      "destination": "/admin-dashboard.html" 
+    },
+    { 
+      "source": "/(.*)",
+      "destination": "/index (1).html" 
     }
   ]
 }
