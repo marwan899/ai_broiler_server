@@ -127,7 +127,7 @@
         }
         
         try {
-            // تم تعديل المسار لاستخدام SERVER_URL
+            // تم تصحيح المسار لربط SERVER_URL
             const response = await fetch(`${SERVER_URL}/api/records/delete`, { 
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
@@ -185,7 +185,7 @@
         };
 
         try {
-            // تم تعديل المسار لاستخدام SERVER_URL
+            // تم تصحيح المسار لربط SERVER_URL
             const response = await fetch(`${SERVER_URL}/api/records/update`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -214,7 +214,7 @@
         flockDetailsDiv.innerHTML = '';
 
         try {
-            // تم تعديل المسار لاستخدام SERVER_URL
+            // تم تصحيح المسار لربط SERVER_URL
             const response = await fetch(`${SERVER_URL}/api/flock/all-data`);
             if (!response.ok) {
                 throw new Error(`فشل في جلب البيانات: ${response.status} ${response.statusText}`);
