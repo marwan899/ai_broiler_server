@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة فروج اللحم (Ross 308)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* (Styles remain the same) */
+        body { font-family: 'Cairo', sans-serif; background-color: #f7f9fc; padding: 20px; }
+        .container-fluid { max-width: 1400px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        th { background-color: #3b82f6; color: white; font-weight: 700; text-align: center; }
+        tbody tr:hover { background-color: #f0f4f8; }
+        .data-card { background-color: #eff6ff; border-left: 5px solid #3b82f6; padding: 1rem; border-radius: 8px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .form-input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid #d1d5db; text-align: right; font-size: 1rem; background-color: #f9fafb; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <h1 class="text-3xl font-bold text-gray-800 border-b pb-3 mb-4">لوحة الإدارة المركزية (سجلات القطيع)</h1>
+        
+        <div class="mb-6">
+            <label for="breeder-search" class="block text-gray-700 font-semibold mb-2">البحث/التصفية باسم المربي:</label>
+            <input type="text" id="breeder-search" class="form-input w-full p-2 border-2 border-blue-300 rounded-lg text-right" placeholder="ابحث بكتابة اسم المربي هنا..." onkeyup="filterTable()">
+        </div>
+        
+        <p id="status-message" class="text-lg font-semibold text-blue-600 mb-4">جاري تحميل البيانات من الخادم...</p>
+
+        <h2 id="current-flock-title" class="text-2xl font-semibold text-gray-700 mt-8 mb-4">ملخص القطعان الإجمالي (عرض الكل)</h2>
+        <div id="flock-details" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            </div>
+
+        <h2 class="text-2xl font-semibold text-gray-700 mt-8 mb-4">السجلات اليومية التفصيلية</h2>
+        <div class="overflow-x-auto">
+            <table id="records-table" class="min-w-full">
+                <thead>
+                    <tr>
+                        <th>الإجراءات</th> 
+                        <th>وقت التسجيل/التعديل</th> 
+                        <th class="rounded-tr-lg">ملاحظات</th>
+                        <th>الوزن (غرام)</th>
+                        <th>النافق</th>
+                        <th>الماء (لتر)</th> 
+                        <th>العلف (كجم)</th>
+                        <th><a href="#" onclick="loadAdminDashboard(null)" class="text-white hover:text-gray-200">المربي (للتصفية اضغط على الاسم)</a></th> 
+                        <th class="rounded-tl-lg">اليوم</th>
+                    </tr>
+                </thead>
+                <tbody id="records-table-body">
+                    </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+    <div id="edit-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">تعديل سجل اليوم <span id="edit-day-display" class="text-blue-600"></span></h2>
+            <p class="text-gray-600 mb-4">القطيع: <span id="edit-flock-id-display" class="font-semibold"></span> | المربي: <span id="edit-breeder-name-display" class="font-semibold"></span></p>
+
+            <form id="edit-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" id="edit-flock-id">
+                <input type="hidden" id="edit-day">
+                <input type="hidden" id="edit-breeder-name-hidden">
+
+                <div>
+                    <label for="edit-feed" class="block text-gray-700 font-semibold mb-2">العلف المستهلك (كغم)</label>
+                    <input type="number" step="0.1" id="edit-feed" class="form-input" required>
+                </div>
+                <div>
+                    <label for="edit-mortality" class="block text-gray-700 font-semibold mb-2">عدد النافق اليوم</label>
+                    <input type="number" id="edit-mortality" class="form-input" required>
+                </div>
+                <div>
+                    <label for="edit-water" class="block text-gray-700 font-semibold mb-2">استهلاك الماء اليومي (لتر)</label>
+                    <input type="number" step="1" id="edit-water" class="form-input" required>
+                </div>
+                <div>
+                    <label for="edit-weight" class="block text-gray-700 font-semibold mb-2">متوسط وزن الطائر (غرام)</label>
+                    <input type="number" id="edit-weight" class="form-input">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="edit-notes" class="block text-gray-700 font-semibold mb-2">الملاحظات/المشاهدات اليومية</label>
+                    <textarea id="edit-notes" rows="3" class="form-input"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-4 mt-6 md:col-span-2">
+                    <button type="button" onclick="closeEditModal()" class="btn bg-gray-500 hover:bg-gray-600 text-white">إلغاء</button>
+                    <button type="submit" class="btn bg-green-600 hover:bg-green-700 text-white">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+<script>
+    const SERVER_URL = ''; // تم تعديله للعمل مع Vercel النسبي
+    
+    const statusMessage = document.getElementById('status-message');
+    const flockDetailsDiv = document.getElementById('flock-details');
+    const recordsTableBody = document.getElementById('records-table-body');
+    const currentFlockTitle = document.getElementById('current-flock-title');
+    const editModal = document.getElementById('edit-modal');
+    const editForm = document.getElementById('edit-form');
+
+    // دالة مساعدة لتنسيق التاريخ والوقت
+    function formatDateTime(isoString) {
+        if (!isoString) return 'غير مسجل';
+        const date = new Date(isoString);
+        return date.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' }) + 
+               ' @ ' + 
+               date.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    
+    // --- دوال الاتصال الجديدة (PUT و DELETE) ---
+    window.deleteRecord = async (flockId, day) => {
+        if (!confirm(`هل أنت متأكد من حذف سجل اليوم ${day} من القطيع ${flockId}؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
+            return;
+        }
+        
+        try {
+            // نستخدم مسار Vercel الجديد
+            const response = await fetch(`/api/index/records/delete`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ flockId, day })
+            });
+            
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || `فشل الحذف لليوم ${day}.`);
+            }
+
+            alert(result.message);
+            loadAdminDashboard(null); 
+            
+        } catch (error) {
+            alert(`خطأ: ${error.message}`);
+            console.error('Delete Error:', error);
+        }
+    }
+
+    // --- دالة فتح مودال التعديل (معدل) ---
+    window.openEditModal = (record) => {
+        document.getElementById('edit-day-display').textContent = record.day;
+        document.getElementById('edit-flock-id-display').textContent = record.flockId;
+        document.getElementById('edit-breeder-name-display').textContent = record.breederName;
+        
+        document.getElementById('edit-flock-id').value = record.flockId;
+        document.getElementById('edit-day').value = record.day;
+        document.getElementById('edit-breeder-name-hidden').value = record.breederName; // لحفظ الاسم
+        document.getElementById('edit-feed').value = record.feedKg || 0;
+        document.getElementById('edit-mortality').value = record.mortality || 0;
+        document.getElementById('edit-water').value = record.waterIntake || 0;
+        document.getElementById('edit-weight').value = record.avgWeight || ''; 
+        document.getElementById('edit-notes').value = record.notes || '';
+        
+        editModal.classList.remove('hidden');
+    }
+
+    // --- دالة إغلاق المودال ---
+    window.closeEditModal = () => {
+        editModal.classList.add('hidden');
+    }
+
+    // --- معالج إرسال التعديل (PUT) ---
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const updatedData = {
+            flockId: document.getElementById('edit-flock-id').value,
+            day: parseInt(document.getElementById('edit-day').value),
+            breederName: document.getElementById('edit-breeder-name-hidden').value, 
+            avgWeight: document.getElementById('edit-weight').value === '' ? null : parseFloat(document.getElementById('edit-weight').value),
+            mortality: parseInt(document.getElementById('edit-mortality').value) || 0,
+            feedKg: parseFloat(document.getElementById('edit-feed').value) || 0,
+            waterIntake: parseFloat(document.getElementById('edit-water').value) || 0, // <--- إرسال الماء
+            notes: document.getElementById('edit-notes').value.trim()
+        };
+
+        try {
+            // نستخدم مسار Vercel الجديد
+            const response = await fetch(`/api/index/records/update`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+            
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || `فشل التعديل لليوم ${updatedData.day}.`);
+            }
+            
+            alert(`✅ تم تحديث سجل اليوم ${updatedData.day} بنجاح.`);
+            closeEditModal();
+            loadAdminDashboard(null); 
+            
+        } catch (error) {
+            alert(`خطأ في التعديل: ${error.message}`);
+            console.error('Update Error:', error);
+        }
+    });
+
+    // --- دالة لجلب وعرض البيانات (معدلة للتصفية) ---
+    window.loadAdminDashboard = async (filterBreederName = null) => {
+        statusMessage.textContent = 'جاري الاتصال بالخادم...';
+        recordsTableBody.innerHTML = '';
+        flockDetailsDiv.innerHTML = '';
+
+        try {
+            // نستخدم مسار Vercel الجديد
+            const response = await fetch(`/api/index/flock/all-data`);
+            if (!response.ok) {
+                throw new Error(`فشل في جلب البيانات: ${response.status} ${response.statusText}`);
+            }
+
+            const allFlockData = await response.json();
+            
+            let flocksToDisplay;
+
+            if (filterBreederName) {
+                flocksToDisplay = allFlockData.filter(f => f.breederName && f.breederName.toUpperCase() === filterBreederName.toUpperCase());
+                currentFlockTitle.textContent = `ملخص بيانات المربي: ${filterBreederName}`;
+            } else {
+                flocksToDisplay = allFlockData;
+                currentFlockTitle.textContent = `ملخص القطعان الإجمالي (عرض الكل)`;
+            }
+
+            if (flocksToDisplay.length === 0) {
+                statusMessage.className = 'text-lg font-semibold text-orange-600 mb-4';
+                statusMessage.textContent = filterBreederName ? `لا توجد بيانات مسجلة للمربي: ${filterBreederName}.` : '✅ الخادم يعمل، ولكن لا توجد سجلات بعد.';
+                return;
+            }
+
+            let allRecords = [];
+            flocksToDisplay.forEach(flock => {
+                 if (flock.dailyRecords) {
+                    allRecords = allRecords.concat(flock.dailyRecords.map(record => ({
+                        ...record,
+                        initialChickCount: flock.initialChickCount,
+                        flockId: flock.flockId // تأكيد إضافة الـ ID للحذف والتعديل
+                    })));
+                 }
+            });
+            
+            // حساب الإجمالي للملخص
+            const totalInitialCount = flocksToDisplay.reduce((sum, f) => sum + (f.initialChickCount || 0), 0);
+            const totalMortality = allRecords.reduce((sum, r) => sum + (r.mortality || 0), 0);
+            const totalFeed = allRecords.reduce((sum, r) => sum + (r.feedKg || 0), 0);
+            const currentTotalCount = totalInitialCount - totalMortality;
+
+            // عرض تفاصيل القطيع الرئيسية (الإجمالي)
+            flockDetailsDiv.innerHTML = `
+                <div class="data-card lg:col-span-2 bg-indigo-50 border-indigo-600">إجمالي المربين: <span class="font-bold text-indigo-700">${flocksToDisplay.length}</span></div>
+                <div class="data-card bg-green-50 border-green-600">إجمالي العدد الأولي: <span class="font-bold text-green-700">${totalInitialCount.toLocaleString('ar-IQ')}</span></div>
+                <div class="data-card">إجمالي الطيور الحالي: <span class="font-bold text-green-700">${currentTotalCount.toLocaleString('ar-IQ')}</span></div>
+                <div class="data-card">إجمالي النفوق: <span class="font-bold text-red-600">${totalMortality.toLocaleString('ar-IQ')}</span></div>
+                <div class="data-card lg:col-span-2">إجمالي العلف المستهلك (كجم): <span class="font-bold">${totalFeed.toFixed(2)}</span></div>
+            `;
+
+            // 4. عرض السجلات في الجدول
+            const sortedRecords = [...allRecords].sort((a, b) => {
+                if (a.breederName !== b.breederName) {
+                    return a.breederName.localeCompare(b.breederName);
+                }
+                return b.day - a.day;
+            });
+
+            sortedRecords.forEach(record => {
+                const row = recordsTableBody.insertRow();
+                const recordJsonString = JSON.stringify(record).replace(/"/g, '&quot;'); 
+                
+                const displayDateTime = formatDateTime(record.updatedAt || record.createdAt);
+
+                row.innerHTML = `
+                    <td>
+                        <button onclick='openEditModal(${recordJsonString})' class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded-md">تعديل</button>
+                        <button onclick="deleteRecord('${record.flockId}', ${record.day})" class="text-xs bg-red-500 hover:bg-red-600 text-white p-1 rounded-md mt-1">حذف</button>
+                    </td>
+                    <td class="text-sm">${displayDateTime}</td>
+                    <td class="text-sm w-40">${record.notes || 'لا توجد ملاحظات'}</td>
+                    <td class="text-center">${record.avgWeight !== null ? record.avgWeight : '--'}</td>
+                    <td class="text-center text-red-600 font-semibold">${record.mortality || 0}</td>
+                    <td class="text-center text-blue-600 font-semibold">${record.waterIntake !== null ? record.waterIntake : '--'}</td>
+                    <td class="text-center">${record.feedKg !== null ? record.feedKg.toFixed(2) : '--'}</td>
+                    <td class="text-center font-bold text-indigo-700">
+                        <a href="#" onclick="loadAdminDashboard('${record.breederName}')" class="hover:underline">
+                            ${record.breederName || 'N/A'}
+                        </a>
+                    </td> 
+                    <td class="text-center font-bold text-blue-700">${record.day}</td>
+                `;
+            });
+
+            statusMessage.className = 'text-lg font-semibold text-green-600 mb-4';
+            statusMessage.textContent = `✅ تم تحديث البيانات بنجاح. مجموع السجلات: ${allRecords.length}.`;
+
+        } catch (error) {
+            console.error("خطأ في الاتصال بالخادم:", error);
+            statusMessage.className = 'text-lg font-semibold text-red-600 mb-4';
+            statusMessage.textContent = `🛑 فشل الاتصال بالخادم: تأكد من أن الخادم يعمل ومتاح عبر HTTPS. (${error.message})`;
+        }
+    }
+
+    // --- دالة البحث والتصفية (على مستوى الجدول الحالي) ---
+    window.filterTable = () => {
+        const input = document.getElementById('breeder-search');
+        const filter = input.value.toUpperCase();
+        const tr = recordsTableBody.getElementsByTagName('tr');
+        const breederColumnIndex = 7; 
+
+        for (let i = 0; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td')[breederColumnIndex];
+            if (td) {
+                const txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }       
+        }
+    }
+
+    // تشغيل الدالة عند تحميل الصفحة
+    loadAdminDashboard(null);
+</script>
+</body>
+</html>

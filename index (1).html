@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الإدارة الذكي لفروج اللحم Ross 308</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* (Styles remain the same) */
+        body { font-family: 'Cairo', sans-serif; overscroll-behavior-y: contain; background-color: #f7f9fc; }
+        .container-fluid { max-width: 1400px; margin: 0 auto; }
+        .card { background-color: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); transition: all 0.3s ease-in-out; border: 1px solid #e5e7eb; }
+        .metric-card { background-color: #ffffff; border-radius: 12px; padding: 1rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); border: 1px solid #dbeafe; text-align: center; }
+        .metric-value { font-size: 1.75rem; font-weight: 800; color: #1e3a8a; margin-top: 0.5rem; }
+        .metric-label { font-size: 0.875rem; color: #4b5563; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; text-align: center; cursor: pointer; transition: all 0.2s ease-in-out; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        #flock-age-input { width: 100%; text-align: center; border: 2px solid #3b82f6; background-color: #eff6ff; color: #1e3a8a; font-size: 1.75rem !important; padding: 0.25rem 0; }
+        input[type="number"], input[type="date"], textarea, .form-input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid #d1d5db; text-align: right; font-size: 1rem; background-color: #f9fafb; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; max-width: 550px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .loader { width: 24px; height: 24px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="dashboard-screen" class="p-4 md:p-8 container-fluid hidden">
+        <header class="mb-6 border-b pb-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-800">نظام الإدارة الذكي لفروج اللحم (Ross 308)</h1>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <span id="current-breeder-display" class="font-bold text-lg text-indigo-700"></span>
+                    <button id="reset-button" class="btn text-sm bg-red-500 hover:bg-red-600">بدء دورة جديدة</button>
+                </div>
+            </div>
+            <p class="text-base text-gray-500 mt-1">تطوير: <span class="font-semibold text-blue-600">Eng Marwan AL Nasree</span></p>
+        </header>
+
+        <div class="card mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">المؤشرات السريعة (المستهدفة والديناميكية)</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+                
+                <div class="metric-card bg-blue-50">
+                    <div class="metric-label font-bold text-blue-700">العمر (يوم)</div>
+                    <input type="number" id="flock-age-input" class="rounded-lg mt-1" value="0">
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">علف/طير اليوم (غرام)</div>
+                    <div id="target-daily-feed" class="metric-value">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">الوزن المتوقع/طير (غرام)</div>
+                    <div id="target-weight-grams" class="metric-value">--</div>
+                </div>
+                <div class="metric-card bg-yellow-50">
+                    <div class="metric-label text-yellow-800 font-bold">معامل FCR المستهدف</div>
+                    <div id="target-fcr" class="metric-value text-yellow-800">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:col-span-3 gap-6">
+
+            <div class="space-y-6 lg:col-span-2">
+                
+                <div class="card">
+                    <h2 class="text-xl font-bold text-blue-700 mb-4 border-b pb-2">البيئة والأداء (لليوم <span id="current-age-display">0</span>)</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
+                        <div>
+                            <div class="metric-label">الحرارة المستهدفة (°م)</div>
+                            <div id="target-temp" class="metric-value text-green-700">--</div>
+                        </div>
+                        <div>
+                            <div class="metric-label">الرطوبة المستهدفة (%)</div>
+                            <div id="target-humidity" class="metric-value text-green-700">--</div>
+                        </div>
+                        <div>
+                            <div class="metric-label">الوزن المتوقع (غرام)</div>
+                            <div id="target-weight" class="metric-value text-green-700">--</div>
+                        </div>
+                         <div>
+                            <div class="metric-label text-red-700">نسبة النفوق الإجمالية (%)</div>
+                            <div id="total-mortality-rate" class="metric-value text-red-700">0%</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="metric-label">العلف المستهلك الفعلي (كغم)</div>
+                            <div id="actual-cumulative-feed" class="metric-value text-gray-700 text-xl">--</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="metric-label text-red-600">FCR الفعلي التراكمي</div>
+                            <div id="actual-fcr" class="metric-value text-red-600 text-xl">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">تسجيل بيانات اليوم</h2>
+                    <p id="data-entry-message" class="text-center font-semibold mb-4 hidden"></p>
+                    <form id="daily-data-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        
+                         <div class="md:col-span-3">
+                            <label for="breeder-name" class="block text-gray-700 font-semibold mb-2">اسم المربي</label>
+                            <input type="text" id="breeder-name" class="form-input bg-gray-200" disabled placeholder="يتم تحديده عند الإعداد الأولي">
+                        </div>
+                        
+                        <div id="initial-count-section" class="md:col-span-3 hidden">
+                            <label for="initial-chick-count" class="block text-gray-700 font-semibold mb-2 text-indigo-700">عدد القطيع الأولي (مطلوب لمرة واحدة)</label>
+                            <input type="number" id="initial-chick-count" class="form-input border-indigo-500 bg-indigo-50" placeholder="مثال: 5000">
+                        </div>
+
+                        <div class="md:col-span-1">
+                            <label for="actual-feed" class="block text-gray-700 font-semibold mb-2">العلف المستهلك (كغم)</label>
+                            <input type="number" step="0.1" id="actual-feed" class="form-input" placeholder="مثال: 150.5">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label for="mortality-count" class="block text-gray-700 font-semibold mb-2">عدد النافق اليوم</label>
+                            <input type="number" id="mortality-count" class="form-input" value="0">
+                        </div>
+                        
+                        <div class="md:col-span-1">
+                            <label for="actual-water" class="block text-gray-700 font-semibold mb-2 text-blue-700">استهلاك الماء اليومي (لتر)</label>
+                            <input type="number" step="1" id="actual-water" class="form-input border-blue-500 bg-blue-50" placeholder="مثال: 350">
+                        </div>
+                        
+                        <div class="md:col-span-1">
+                            <label for="actual-weight" class="block text-gray-700 font-semibold mb-2">متوسط وزن الطائر (غرام)</label>
+                            <input type="number" id="actual-weight" class="form-input" placeholder="مطلوب كل 3-4 أيام">
+                        </div>
+                        
+                        <div class="md:col-span-3">
+                            <label for="notes" class="block text-gray-700 font-semibold mb-2">الملاحظات/المشاهدات اليومية</label>
+                            <textarea id="notes" rows="3" class="form-input" placeholder="مثال: لوحظ انخفاض طفيف في استهلاك الماء. تم إعطاء فيتامين C"></textarea>
+                        </div>
+
+                        <button type="submit" id="save-daily-data" class="btn btn-primary w-full mt-2 md:col-span-3">حفظ بيانات اليوم</button>
+                    </form>
+                </div>
+
+            </div>
+            
+            <div class="space-y-6 lg:col-span-1">
+                
+                <div class="card bg-indigo-50 border-indigo-200">
+                    <h2 class="text-xl font-bold text-indigo-800 mb-4 border-b border-indigo-300 pb-2">💡 نصائح وإرشادات اليوم</h2>
+                    <p id="daily-tips-content" class="text-gray-700 leading-relaxed min-h-[100px]">سيتم عرض النصائح هنا...</p>
+                </div>
+
+                <div class="card text-center bg-green-50 border-green-200">
+                    <h2 class="text-xl font-bold text-green-700 mb-4">🩺 المستشار الصحي الذكي</h2>
+                    <p class="text-gray-600 mb-4 text-sm">حلل الأعراض المحتملة للقطيع بسرعة.</p>
+                    <button id="open-ai-modal-btn" class="btn btn-primary w-full bg-green-600 hover:bg-green-700">✨ استشارة فورية بالذكاء الاصطناعي</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div id="initial-setup-modal" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">👋 أهلاً بك في نظام الإدارة الذكي</h2>
+            <p class="text-gray-700 mb-6">يرجى إدخال اسمك (أو اسم المزرعة) للبدء. سيتم ربط جميع بياناتك بهذا الاسم.</p>
+            
+            <input type="text" id="initial-breeder-name-input" class="form-input w-full p-3 border-blue-500 mb-4 text-center text-xl font-semibold" placeholder="أدخل اسم المربي هنا" required>
+
+            <button id="start-app-btn" class="btn btn-primary w-full">بدء التسجيل</button>
+            <p class="text-red-500 mt-2 hidden" id="setup-error-message">الرجاء إدخال اسم صحيح لا يقل عن 3 أحرف.</p>
+        </div>
+    </div>
+    
+    <div id="ai-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">وصف حالة القطيع</h2>
+            <p class="text-gray-600 mb-4">اكتب بالتفصيل الأعراض التي تلاحظها، مع ذكر أي تغييرات في السلوك أو الشهية.</p>
+            <textarea id="symptoms-input" rows="5" class="w-full p-3 border rounded-lg mb-4 text-right" placeholder="مثال: الدجاج يعاني من خمول وإسهال أبيض وصعوبة في التنفس..."></textarea>
+            
+            <label for="image-input" class="block text-gray-700 font-semibold mb-2">رفع صورة للمعاينة (اختياري)</label>
+            <input type="file" id="image-input" accept="image/*" class="w-full p-2 border rounded-lg mb-4 text-right bg-gray-50">
+            
+            <div id="ai-result" class="mt-4 p-3 bg-gray-100 rounded-lg min-h-[100px] text-gray-700 leading-relaxed"></div>
+            
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="close-ai-modal-btn" class="btn btn-secondary">إغلاق</button>
+                <button id="analyze-symptoms-btn" class="btn btn-primary">
+                    <span id="analyze-btn-text">تحليل الأعراض</span>
+                    <span id="analyze-loader" class="loader hidden"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-reset-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">تأكيد بدء دورة جديدة</h2>
+            <p class="text-gray-700 mb-6">هل أنت متأكد تمامًا من بدء دورة جديدة؟ <strong>هذا الإجراء سيقوم بإعادة تعيين بياناتك بالكامل في الخادم والواجهة.</strong></p>
+            
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="cancel-reset-btn" class="btn btn-secondary">إلغاء</button>
+                <button id="confirm-reset-btn" class="btn btn-danger bg-red-600 hover:bg-red-700">نعم، ابدأ دورة جديدة</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// --- البيانات الإرشادية لفروج اللحم (Ross 308 Standards) ---
+const broilerGuideData = [
+    { day: 0, weight: 42, dailyFeed: 0, cumulativeFeed: 0, fcr: 0, temp: 33, humidity: 65 },
+    { day: 1, weight: 55, dailyFeed: 12, cumulativeFeed: 12, fcr: 0.92, temp: 33, humidity: 65 },
+    { day: 2, weight: 70, dailyFeed: 15, cumulativeFeed: 27, fcr: 0.96, temp: 33, humidity: 65 },
+    { day: 3, weight: 88, dailyFeed: 18, cumulativeFeed: 45, fcr: 1.00, temp: 32, humidity: 65 },
+    { day: 4, weight: 110, dailyFeed: 22, cumulativeFeed: 67, fcr: 1.02, temp: 32, humidity: 65 },
+    { day: 5, weight: 135, dailyFeed: 25, cumulativeFeed: 92, fcr: 1.04, temp: 31, humidity: 65 },
+    { day: 6, weight: 160, dailyFeed: 28, cumulativeFeed: 120, fcr: 1.06, temp: 31, humidity: 65 },
+    { day: 7, weight: 188, dailyFeed: 32, cumulativeFeed: 152, fcr: 1.08, temp: 30, humidity: 60 },
+    { day: 8, weight: 220, dailyFeed: 36, cumulativeFeed: 188, fcr: 1.10, temp: 30, humidity: 60 },
+    { day: 9, weight: 255, dailyFeed: 40, cumulativeFeed: 228, fcr: 1.12, temp: 30, humidity: 60 },
+    { day: 10, weight: 295, dailyFeed: 45, cumulativeFeed: 273, fcr: 1.14, temp: 29, humidity: 60 },
+    { day: 11, weight: 340, dailyFeed: 50, cumulativeFeed: 323, fcr: 1.16, temp: 29, humidity: 60 },
+    { day: 12, weight: 385, dailyFeed: 55, cumulativeFeed: 378, fcr: 1.18, temp: 29, humidity: 60 },
+    { day: 13, weight: 435, dailyFeed: 60, cumulativeFeed: 438, fcr: 1.20, temp: 28, humidity: 55 },
+    { day: 14, weight: 488, dailyFeed: 65, cumulativeFeed: 503, fcr: 1.22, temp: 28, humidity: 55 },
+    { day: 15, weight: 545, dailyFeed: 70, cumulativeFeed: 573, fcr: 1.24, temp: 28, humidity: 55 },
+    { day: 16, weight: 605, dailyFeed: 76, cumulativeFeed: 649, fcr: 1.26, temp: 27, humidity: 55 },
+    { day: 17, weight: 670, dailyFeed: 82, cumulativeFeed: 731, fcr: 1.28, temp: 27, humidity: 55 },
+    { day: 18, weight: 735, dailyFeed: 88, cumulativeFeed: 819, fcr: 1.30, temp: 27, humidity: 55 },
+    { day: 19, weight: 805, dailyFeed: 94, cumulativeFeed: 913, fcr: 1.32, temp: 26, humidity: 55 },
+    { day: 20, weight: 880, dailyFeed: 100, cumulativeFeed: 1013, fcr: 1.34, temp: 26, humidity: 55 },
+    { day: 21, weight: 955, dailyFeed: 106, cumulativeFeed: 1119, fcr: 1.36, temp: 26, humidity: 55 },
+    { day: 22, weight: 1035, dailyFeed: 112, cumulativeFeed: 1231, fcr: 1.38, temp: 25, humidity: 60 },
+    { day: 23, weight: 1115, dailyFeed: 118, cumulativeFeed: 1349, fcr: 1.40, temp: 25, humidity: 60 },
+    { day: 24, weight: 1200, dailyFeed: 124, cumulativeFeed: 1473, fcr: 1.42, temp: 25, humidity: 60 },
+    { day: 25, weight: 1285, dailyFeed: 130, cumulativeFeed: 1603, fcr: 1.44, temp: 24, humidity: 60 },
+    { day: 26, weight: 1375, dailyFeed: 136, cumulativeFeed: 1739, fcr: 1.46, temp: 24, humidity: 60 },
+    { day: 27, weight: 1465, dailyFeed: 142, cumulativeFeed: 1881, fcr: 1.48, temp: 24, humidity: 60 },
+    { day: 28, weight: 1560, dailyFeed: 148, cumulativeFeed: 2029, fcr: 1.50, temp: 23, humidity: 60 },
+    { day: 29, weight: 1655, dailyFeed: 153, cumulativeFeed: 2182, fcr: 1.52, temp: 23, humidity: 65 },
+    { day: 30, weight: 1750, dailyFeed: 158, cumulativeFeed: 2340, fcr: 1.54, temp: 23, humidity: 65 },
+    { day: 31, weight: 1850, dailyFeed: 163, cumulativeFeed: 2503, fcr: 1.56, temp: 22, humidity: 65 },
+    { day: 32, weight: 1950, dailyFeed: 168, cumulativeFeed: 2671, fcr: 1.58, temp: 22, humidity: 65 },
+    { day: 33, weight: 2050, dailyFeed: 172, cumulativeFeed: 2843, fcr: 1.60, temp: 22, humidity: 65 },
+    { day: 34, weight: 2150, dailyFeed: 176, cumulativeFeed: 3019, fcr: 1.62, temp: 21, humidity: 70 },
+    { day: 35, weight: 2250, dailyFeed: 180, cumulativeFeed: 3199, fcr: 1.64, temp: 21, humidity: 70 },
+    { day: 36, weight: 2350, dailyFeed: 184, cumulativeFeed: 3383, fcr: 1.66, temp: 21, humidity: 70 },
+    { day: 37, weight: 2450, dailyFeed: 188, cumulativeFeed: 3571, fcr: 1.68, temp: 21, humidity: 70 },
+    { day: 38, weight: 2550, dailyFeed: 191, cumulativeFeed: 3762, fcr: 1.70, temp: 20, humidity: 70 },
+    { day: 39, weight: 2650, dailyFeed: 194, cumulativeFeed: 3956, fcr: 1.72, temp: 20, humidity: 70 },
+    { day: 40, weight: 2750, dailyFeed: 197, cumulativeFeed: 4153, fcr: 1.74, temp: 20, humidity: 70 },
+    { day: 41, weight: 2840, dailyFeed: 200, cumulativeFeed: 4353, fcr: 1.76, temp: 20, humidity: 70 },
+    { day: 42, weight: 2930, dailyFeed: 202, cumulativeFeed: 4555, fcr: 1.78, temp: 20, humidity: 70 },
+    { day: 43, weight: 3020, dailyFeed: 204, cumulativeFeed: 4759, fcr: 1.80, temp: 20, humidity: 70 },
+    { day: 44, weight: 3110, dailyFeed: 206, cumulativeFeed: 4965, fcr: 1.82, temp: 20, humidity: 70 },
+    { day: 45, weight: 3200, dailyFeed: 208, cumulativeFeed: 5173, fcr: 1.84, temp: 20, humidity: 70 },
+    { day: 46, weight: 3290, dailyFeed: 210, cumulativeFeed: 5383, fcr: 1.86, temp: 20, humidity: 70 },
+    { day: 47, weight: 3380, dailyFeed: 212, cumulativeFeed: 5595, fcr: 1.88, temp: 20, humidity: 70 },
+    { day: 48, weight: 3470, dailyFeed: 214, cumulativeFeed: 5809, fcr: 1.90, temp: 20, humidity: 70 },
+    { day: 49, weight: 3560, dailyFeed: 216, cumulativeFeed: 6025, fcr: 1.92, temp: 20, humidity: 70 },
+    { day: 50, weight: 3650, dailyFeed: 218, cumulativeFeed: 6243, fcr: 1.94, temp: 20, humidity: 70 },
+    { day: 51, weight: 3740, dailyFeed: 220, cumulativeFeed: 6463, fcr: 1.96, temp: 20, humidity: 70 },
+    { day: 52, weight: 3830, dailyFeed: 220, cumulativeFeed: 6683, fcr: 1.98, temp: 20, humidity: 70 },
+    { day: 53, weight: 3920, dailyFeed: 221, cumulativeFeed: 6904, fcr: 2.00, temp: 20, humidity: 70 },
+    { day: 54, weight: 4010, dailyFeed: 221, cumulativeFeed: 7125, fcr: 2.02, temp: 20, humidity: 70 },
+    { day: 55, weight: 4100, dailyFeed: 222, cumulativeFeed: 7347, fcr: 2.04, temp: 20, humidity: 70 },
+    { day: 56, weight: 4190, dailyFeed: 222, cumulativeFeed: 7569, fcr: 2.06, temp: 20, humidity: 70 },
+    { day: 57, weight: 4280, dailyFeed: 223, cumulativeFeed: 7792, fcr: 2.08, temp: 20, humidity: 70 },
+    { day: 58, weight: 4370, dailyFeed: 223, cumulativeFeed: 8015, fcr: 2.10, temp: 20, humidity: 70 },
+    { day: 59, weight: 4460, dailyFeed: 224, cumulativeFeed: 8239, fcr: 2.12, temp: 20, humidity: 70 },
+    { day: 60, weight: 4550, dailyFeed: 224, cumulativeFeed: 8463, fcr: 2.14, temp: 20, humidity: 70 },
+];
+
+const DEFAULT_FLOCK_DATA = {
+    startWeight: 42,         
+    startDate: new Date().toISOString().split('T')[0], 
+    currentAge: 0,
+    initialChickCount: 0, 
+    dailyRecords: [] 
+};
+
+// --- إعدادات الخادم والربط ---
+// سنستخدم رابط Vercel النسبي الآن
+const SERVER_URL = ''; 
+const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
+// ----------------------------------------
+
+let flockData = {...DEFAULT_FLOCK_DATA};
+let currentFlockId = null; 
+let currentBreederName = null;
+
+function createFlockId(name) {
+    // استخدم Base64 لضمان معرف فريد حتى لو كان الاسم يحتوي على رموز
+    return 'FLOCK_' + btoa(name.trim().toUpperCase());
+}
+
+// ... (بقية كود JavaScript يبقى كما هو)
+// ... (دالة loadFlockDataFromServer تم تعديلها لاستخدام المعرف الديناميكي)
+// ... (دالة saveRecordToServer تم تعديلها لاستخدام المعرف الديناميكي)
+// ... (منطق الإعداد الأولي والتحقق من العدد الأولي)
+// ... (دالة loadData)
+// ... (دالة updateDashboard)
+// ... (دالة calculateAndDisplayMetrics)
+// ... (دوال Gemini API)
+// ... (معالجات الأحداث)
+</script>
+</body>
+</html>
