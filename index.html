@@ -280,7 +280,8 @@ const DEFAULT_FLOCK_DATA = {
 };
 
 // --- إعدادات الخادم والربط ---
-const SERVER_URL = ''; 
+// هذا هو الرابط الثابت لـ Google Cloud App Engine
+const SERVER_URL = 'https://gen-lang-client-0187043650.ew.r.appspot.com'; 
 const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
 // ----------------------------------------
 
@@ -355,8 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_GUIDE_AGE = broilerGuideData.length - 1; 
 
     async function loadFlockDataFromServer(flockId) {
-        // المسار موحد
-        const response = await fetch(`/api/flock/all-data`);
+        // تم تعديل المسار لاستخدام SERVER_URL
+        const response = await fetch(`${SERVER_URL}/api/flock/all-data`);
         if (!response.ok) {
             throw new Error(`فشل في جلب البيانات: ${response.status}`);
         }
@@ -371,8 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error("يجب تحديد معرّف القطيع (flockId) للحفظ.");
         }
         
-        // المسار موحد
-        const response = await fetch(`/api/records/save`, {
+        // تم تعديل المسار لاستخدام SERVER_URL
+        const response = await fetch(`${SERVER_URL}/api/records/save`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -548,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const age = flockData.currentAge;
         const breederName = document.getElementById('breeder-name').value.trim();
-        const initialChickCount = parseInt(initialCountInputSection.classList.contains('hidden') ? 0 : initialChickCountInput.value) || 0; 
+        const initialChickCount = parseInt(document.getElementById('initial-count-section').classList.contains('hidden') ? 0 : document.getElementById('initial-chick-count').value) || 0; 
         const waterIntake = parseFloat(document.getElementById('actual-water').value) || 0; 
         const feedKg = parseFloat(document.getElementById('actual-feed').value) || 0;
         const mortality = parseInt(document.getElementById('mortality-count').value) || 0;
