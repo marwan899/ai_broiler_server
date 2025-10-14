@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS مخصص للتطبيق */
+        /* (Styles remain the same) */
         body { font-family: 'Cairo', sans-serif; overscroll-behavior-y: contain; background-color: #f7f9fc; }
         .container-fluid { max-width: 1400px; margin: 0 auto; }
         .card { background-color: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); transition: all 0.3s ease-in-out; border: 1px solid #e5e7eb; }
@@ -279,7 +279,8 @@ const DEFAULT_FLOCK_DATA = {
     dailyRecords: [] 
 };
 
-// --- إعدادات الخادم والربط --- 
+// --- إعدادات الخادم والربط ---
+const SERVER_URL = ''; 
 const GEMINI_API_KEY = "AIzaSyDsxvFn9iN_cHZ8ElLKWldYOiWVHgJ5myh"; 
 // ----------------------------------------
 
@@ -354,10 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_GUIDE_AGE = broilerGuideData.length - 1; 
 
     async function loadFlockDataFromServer(flockId) {
-        // تم تعديل المسار هنا: /api/flock/all-data
-        const response = await fetch('/api/flock/all-data');
-التصدير إلى "جداول بيانات Google"
-
+        // المسار موحد
+        const response = await fetch(`/api/flock/all-data`);
         if (!response.ok) {
             throw new Error(`فشل في جلب البيانات: ${response.status}`);
         }
@@ -372,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error("يجب تحديد معرّف القطيع (flockId) للحفظ.");
         }
         
-        // تم تعديل المسار هنا: /api/records/save
+        // المسار موحد
         const response = await fetch(`/api/records/save`, {
             method: 'POST',
             headers: {
@@ -630,6 +629,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
-
